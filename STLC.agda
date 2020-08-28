@@ -21,6 +21,7 @@ infixl 10 _∶_
 -- infix  9 #_
 
 
+
 data Type : Set where
   _⟶_ : Type → Type → Type
   ⊤    : Type
@@ -34,11 +35,12 @@ infix 4 _∋_∶_
 data _∋_∶_ : Context → Term → Type → Set
 
 
+infixl 10 _,_∶_ 
 data Context where
   ∅   : Context
   _,_∶_ : Context → Term → Type → Context
 
-data Term where 
+data Term where
   ‵_ : ∀ {Γ x A} → Γ ∋ x ∶ A → Term 
 
   ƛ_ : Term → Term 
@@ -77,36 +79,42 @@ data _∋_∶_ where
 
 
 
+-- a = {!   !}
+
 infix 4 _⊢_⇐_
 infix 4 _⊢_⇒_
 
 data _⊢_⇐_ : Context → Term → Type → Set
 data _⊢_⇒_ : Context → Term → Type → Set
 
+variable 
+  Γ : Context
+  x e f : Term 
+  A B : Type 
 
 data _⊢_⇒_ where 
 
-  Var : ∀ {Γ x A}
-    → Γ ∋ x ∶ A
+  Var : 
+      Γ ∋ x ∶ A
     ----------------------------
     → Γ ⊢ x ⇒ A
 
-  Anno : ∀ {Γ e A}
-    → Γ ⊢ e ⇐ A
+  Anno : 
+      Γ ⊢ e ⇐ A
     ----------------------------
     → Γ ⊢ (e ∶ A) ⇒ A
 
 
-  ⟶E : ∀ {Γ f A e B}
-    → Γ ⊢ f ⇒ (A ⟶ B)
+  ⟶E :
+      Γ ⊢ f ⇒ (A ⟶ B)
     → Γ ⊢ e ⇐ A
     ----------------------------
     → Γ ⊢ f ∙ e ⇒ B
 
 data _⊢_⇐_ where 
   
-  Sub : ∀ {Γ e A B}
-    → Γ ∋ e ∶ A
+  Sub :
+      Γ ∋ e ∶ A
     → A ≡ B
     ----------------------------
     → Γ ⊢ e ⇐ B
@@ -115,9 +123,17 @@ data _⊢_⇐_ where
     ----------------------------
     → Γ ⊢ tt ⇐ ⊤
 
-  ⟶I : ∀ {Γ x A e B}
-    → (Γ , x ∶ A) ⊢ e ⇐ B
+  ⟶I : 
+      (Γ , x ∶ A) ⊢ e ⇐ B
     ----------------------------
     → Γ ⊢ ƛ e ⇐ A ⟶ B
 
--- data ModeCorrect : Set where 
+4-4-Synth : ∅ , x ∶ A ⊢ x ⇒ A
+4-4-Synth = Var Z
+
+
+4-4-Check : ∅ , x ∶ A ⊢ x ⇐ A
+4-4-Check = Sub Z refl
+
+4-4-Sym→Elim : ∅ , f ∶ (A ⟶ B) , x ∶ A ⊢ (f ∙ x) ⇒ B
+4-4-Sym→Elim = ⟶E (Var (S Z)) (Sub Z refl)
