@@ -39,31 +39,29 @@ incr-above (suc n) (var suc x) = incr-var (incr-above n (var x))
 incr-above n       (ƛ M)       = ƛ (incr-above (suc n) M)
 incr-above n       (M ∙ N)     = incr-above n M ∙ incr-above n N
 
-incr : Term → Term 
-incr = incr-above zero 
+-- incr : Term → Term 
+-- incr = incr-above zero 
 
-decr-var : Term → Term 
-decr-var (var x) = var (pred x)
-decr-var (ƛ M)   = ƛ M
-decr-var (M ∙ N) = M ∙ N
+-- incr-free-vars 0 (ƛ ƛ var 0)
+-- incr-free-vars 2 (var 0)
 
-decr-above : ℕ → Term → Term 
-decr-above zero (var x) = var pred x
-decr-above (suc n) (var zero) = var zero
-decr-above (suc n) (var suc x) = decr-var (decr-above n (var x))
-decr-above n (ƛ M)   = ƛ decr-above (suc n) M
-decr-above n (M ∙ N) = decr-above n M ∙ decr-above n N
+-- 1 > 0   ==> bound 
 
-
-decr : Term → Term 
-decr = decr-above zero 
+incr-free-vars : ℕ → ℕ → Term → Term 
+incr-free-vars free water-level (var x) with free >? x
+incr-free-vars free water-level (var x) | yes p = var x       -- bound 
+incr-free-vars free water-level (var x) | no ¬p with water-level >? x -- free 
+incr-free-vars free water-level (var x) | no ¬p | yes q = var (suc x) -- below the water-level, should increment
+incr-free-vars free water-level (var x) | no ¬p | no ¬q = var x -- above the water-level, safe 
+incr-free-vars free water-level (ƛ M)   = ƛ (incr-free-vars (suc free) water-level M)
+incr-free-vars free water-level (M ∙ N) = incr-free-vars free water-level M ∙ incr-free-vars free water-level N
 
 
 _[_/_] : Term → Term → ℕ → Term 
 (var x)   [ N / n ] with x ≟ n 
 (var x)   [ N / n ] | yes p = N
 (var x)   [ N / n ] | no ¬p = var x
-(ƛ M)     [ N / n ] = ƛ ((M [ N / suc n ]))
+(ƛ M)     [ N / n ] = ƛ ((M [ incr-free-vars 0 (suc n) N / suc n ]))
 (L ∙ M)   [ N / n ] = L [ N / n ] ∙ M [ N / n ]
 
 
@@ -112,25 +110,15 @@ SZ = ƛ ƛ var 1 ∙ var 0
 PLUS : Term 
 PLUS = ƛ ƛ ƛ ƛ var 3 ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var 0)
 
-test-0 : ƛ ((ƛ ƛ var 1) ∙ var 0) β→* ƛ ƛ (var 1)
+test-0 : ƛ (ƛ ƛ var 1) ∙ var 0 β→* ƛ ƛ var 1
 test-0 = 
-    ƛ ((ƛ ƛ var 1) ∙ var 0)
+    ƛ (ƛ ƛ var 1) ∙ var 0
   →⟨ β-ƛ β-ƛ-∙ ⟩ 
-    ƛ ((ƛ var 1) [ var 0 / 0 ])
+    ƛ (ƛ var 1) [ var 0 / 0 ]
   →⟨⟩ 
-    ƛ (ƛ ((var 1) [ var 1 / 1 ]))
+    ƛ ƛ ((var 1) [ incr-free-vars 0 1 (var 0) / 1 ])
   →⟨⟩ 
-    ƛ (ƛ var 1)
-  ∎
-
-
-test-1 : ƛ ((ƛ ƛ var 1) ∙ var 0) β→* ƛ ƛ (var 1)
-test-1 = 
-    ƛ ((ƛ ƛ var 1) ∙ var 0)
-  →⟨ β-ƛ β-ƛ-∙ ⟩ 
-    ƛ ((ƛ var 1) [ var 0 / 0 ])
-  →⟨⟩ 
-    ƛ (ƛ ((var 1) [ var 1 / 1 ]))
+    ƛ ƛ ((var 1) [ var 1 / 1 ])
   →⟨⟩ 
     ƛ (ƛ var 1)
   ∎
@@ -146,11 +134,13 @@ test-2 =
   →⟨⟩ 
     ((ƛ (ƛ (ƛ var 3 ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var zero)))) [ Z / 0 ]) ∙ SZ
   →⟨⟩
+    (ƛ ((ƛ (ƛ var 3 ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var zero))) [ incr-free-vars 0 1 Z / 1 ])) ∙ SZ
+  →⟨⟩
     (ƛ ((ƛ (ƛ var 3 ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var zero))) [ Z / 1 ])) ∙ SZ
   →⟨⟩
     (ƛ (ƛ ((ƛ var 3 ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var zero)) [ Z / 2 ]))) ∙ SZ
   →⟨⟩
-    (ƛ ƛ ƛ ((var 3 ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var zero)) [ Z / 3 ])) ∙ SZ
+    (ƛ (ƛ (ƛ ((var 3 ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var zero)) [ Z / 3 ])))) ∙ SZ
   →⟨⟩
     (ƛ ƛ ƛ Z ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var zero)) ∙ SZ
   →⟨ β-ƛ-∙ ⟩ 
@@ -162,11 +152,15 @@ test-2 =
   →⟨⟩
     ƛ ƛ Z ∙ var 1 ∙ (SZ ∙ var 1 ∙ var 0)
   →⟨ β-ƛ (β-ƛ (β-∙-r (β-∙-l β-ƛ-∙))) ⟩ 
+    ƛ ƛ Z ∙ var 1 ∙ (((ƛ var 1 ∙ var 0) [ var 1 ]) ∙ var 0)
+  →⟨⟩
     ƛ ƛ Z ∙ var 1 ∙ (((ƛ var 1 ∙ var 0) [ var 1 / 0 ]) ∙ var 0)
+  →⟨⟩
+    ƛ ƛ Z ∙ var 1 ∙ ((ƛ ((var 1 ∙ var 0) [ incr-free-vars 0 1 (var 1) / 1 ])) ∙ var 0)
   →⟨⟩
     ƛ ƛ Z ∙ var 1 ∙ ((ƛ ((var 1 ∙ var 0) [ var 1 / 1 ])) ∙ var 0)
   →⟨⟩
-    ƛ ƛ Z ∙ var 1 ∙ ((ƛ (var 1 ∙ var 0)) ∙ var 0)
+    ƛ ƛ Z ∙ var 1 ∙ ((ƛ var 1 ∙ var 0) ∙ var 0)
   →⟨ β-ƛ (β-ƛ (β-∙-r β-ƛ-∙)) ⟩ 
     ƛ ƛ Z ∙ var 1 ∙ ((var 1 ∙ var 0) [ var 0 / 0 ])
   →⟨⟩
