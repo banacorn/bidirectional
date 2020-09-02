@@ -35,6 +35,7 @@ shift free subst-depth (ƛ M)   = ƛ (shift (suc free) (suc subst-depth) M)
 shift free subst-depth (M ∙ N) = shift free subst-depth M ∙ shift free subst-depth N
 
 
+infixl 10 _[_/_]
 _[_/_] : Term → Term → ℕ → Term 
 (var x)   [ N / n ] with x ≟ n 
 (var x)   [ N / n ] | yes p = N
@@ -43,6 +44,7 @@ _[_/_] : Term → Term → ℕ → Term
 (L ∙ M)   [ N / n ] = L [ N / n ] ∙ M [ N / n ]
 
 -- substitution
+infixl 10 _[_]
 _[_] : Term → Term → Term 
 M [ N ] = M [ N / zero ]
 
@@ -224,10 +226,10 @@ cong-∙-r (M→N →* N→O) = β-∙-r M→N →* cong-∙-r N→O
 cong-[]2 : ∀ {M N L n} → M β→ N → (M [ L / n ]) β→* (N [ L / n ])
 cong-[]2 (β-ƛ-∙ {var x} {N}) = {!   !}
 cong-[]2 {_} {_} {L} {n} (β-ƛ-∙ {ƛ M} {N}) =
-    (ƛ (ƛ (M [ shift 0 (suc (suc n)) (shift zero (suc n) L) / suc (suc n) ]))) ∙ (N [ L / n ]) 
+    (ƛ (ƛ (M [ shift 0 (suc (suc n)) (shift 0 (suc n) L) / suc (suc n) ]))) ∙ (N [ L / n ]) 
   →*⟨ jump β-ƛ-∙ ⟩ 
     ƛ ((M [ shift 0 (suc (suc n)) (shift 0 (suc n) L) / suc (suc n) ]) [ shift 0 1 (N [ L / n ]) / 1 ]) 
-  →*⟨  cong-ƛ {!   !} ⟩ 
+  →*⟨  cong-ƛ {!  !} ⟩ 
     ƛ {!   !}
   →*⟨ {!   !} ⟩ 
     {!   !} 
@@ -269,30 +271,36 @@ cong-[] (β-∙-r M→N) = {!   !}
 
 normal-unique' : ∀ {M N O} → Normal N → Normal O → M β→ N → M β→ O → N ≡ O
 normal-unique' P Q β-ƛ-∙ β-ƛ-∙ = refl
-normal-unique' P Q (β-ƛ-∙ {M} {L}) (β-∙-l {N = .(ƛ N)} (β-ƛ {N = N} M→N)) = trans (normal P (cong-[]2 M→N)) N[L]≡ƛN∙L
+normal-unique' P Q (β-ƛ-∙ {M} {L}) (β-∙-l {N = .(ƛ N)} (β-ƛ {N = N} M→N)) = {!   !}
+  -- trans (normal P (cong-[]2 M→N)) N[L]≡ƛN∙L
   -- trans (normal P (cong-[]2 M→N)) N[L]≡ƛN∙L 
   where 
     N[L]≡ƛN∙L : (N [ L ]) ≡ (ƛ N) ∙ L
     N[L]≡ƛN∙L = sym (normal Q (jump β-ƛ-∙))
 -- β-ƛ-∙ : ∀ {M N} → ((ƛ M) ∙ N) β→ (M [ N ])
-normal-unique' P Q (β-ƛ-∙ {M} {L}) (β-∙-r {N = N} L→N) = {!   !}
+normal-unique' P Q (β-ƛ-∙ {M} {L}) (β-∙-r {N = N} L→N) = {!  sym (normal Q (jump β-ƛ-∙)) !}
   -- sym (trans (normal Q (jump β-ƛ-∙)) (cong (λ x → M [ x ]) (sym (normal {!   !} (jump N→O)))))
   -- sym (trans (normal Q (jump β-ƛ-∙)) (cong (λ x → {! M [ x ]  !}) {!   !}))
   -- sym (trans {!   !} (normal {! P  !} (jump β-ƛ-∙)))
 normal-unique' P Q (β-ƛ M→N) (β-ƛ M→O) = cong ƛ_ (normal-unique' (normal-ƛ P) (normal-ƛ Q) M→N M→O)
-normal-unique' P Q (β-∙-l M→N) β-ƛ-∙ = {!   !}
-normal-unique' P Q (β-∙-l {L} {N = N} M→N) (β-∙-l {N = O} M→O) = cong (λ x → x ∙ L) (normal-unique' (normal-∙-l P) (normal-∙-l Q) M→N M→O)
-normal-unique' P Q (β-∙-l M→N) (β-∙-r M→O) = cong₂ _∙_ (sym (normal (normal-∙-l Q) (jump M→N))) (normal (normal-∙-r P) (jump M→O))
-normal-unique' P Q (β-∙-r {L} M→N) M→O = {!   !}
+normal-unique' P Q (β-∙-l M→N) β-ƛ-∙ = {!normal (normal-∙-l P) !}
+normal-unique' P Q (β-∙-l {L} {N = N} M→N) (β-∙-l {N = O} M→O) = 
+  cong (λ x → x ∙ L) (normal-unique' (normal-∙-l P) (normal-∙-l Q) M→N M→O)
+normal-unique' P Q (β-∙-l M→N) (β-∙-r M→O) = 
+  cong₂ _∙_ (sym (normal (normal-∙-l Q) (jump M→N))) (normal (normal-∙-r P) (jump M→O))
+normal-unique' {O = O} P Q (β-∙-r {L} {N = N} M→N) M→O =
+  {!   !}
 
 normal-unique : ∀ {M N O} → Normal N → Normal O → M β→* N → M β→* O → N ≡ O
 normal-unique P Q ∎            M→O          = normal P M→O
 normal-unique P Q M→N          ∎            = sym (normal Q M→N)
 normal-unique P Q (_→*_ {M = L} M→L L→N) (_→*_ {M = K} M→K K→O) = {!   !}
+  -- rewrite (normal-unique' {!   !} {!   !} M→L M→K) = normal-unique P Q L→N {!  K→O !}
+  -- where 
+  --   postulate L≡K : L ≡ K 
+  -- normal-unique' P Q {!   !} {!   !}
 -- ... | U = {!   !}
   -- trans {!   !} (normal-unique {!   !} {!   !} L→N {!   !})
-  where 
-    postulate L≡K : L ≡ K 
     -- L≡K = {!   !}
   -- normal-unique P Q {!   !} M→O
 -- normal-unique P Q M→N ∎            = sym (normal Q M→N)
