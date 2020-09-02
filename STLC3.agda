@@ -182,19 +182,46 @@ cong-∙-r (M→N →* N→O) = β-∙-r M→N →* cong-∙-r N→O
 
 
 cong-shift : ∀ {n i} {M N : Term n} → M β→ N → shift (suc i) M β→ shift (suc i) N
-cong-shift {n} (β-ƛ-∙ {var x} {N}) with suc n >? x 
-cong-shift {n} (β-ƛ-∙ {var zero} {N}) | yes p = β-ƛ-∙
-cong-shift {n} (β-ƛ-∙ {var suc x} {N}) | yes (s≤s p) with n >? suc x 
-cong-shift {n} (β-ƛ-∙ {var suc x} {N}) | yes (s≤s p) | yes q = {!   !}
-cong-shift {n} {i} (β-ƛ-∙ {var suc x} {N}) | yes (s≤s p) | no ¬q with suc i >? suc x 
-cong-shift {n} {i} (β-ƛ-∙ {var suc x} {N}) | yes (s≤s p) | no ¬q | yes r = {!   !} -- fishy
-cong-shift {n} {i} (β-ƛ-∙ {var suc x} {N}) | yes (s≤s p) | no ¬q | no ¬r = {!   !}
-cong-shift {n} (β-ƛ-∙ {var zero} {var x}) | no ¬p = {!   !}
-cong-shift {n} (β-ƛ-∙ {var zero} {ƛ N}) | no ¬p = {!   !}
-cong-shift {n} (β-ƛ-∙ {var zero} {N ∙ O}) | no ¬p = {!   !}
-cong-shift {n} (β-ƛ-∙ {var suc x} {N}) | no ¬p = {!   !}
+cong-shift {n} (β-ƛ-∙ {var x} {var y}) with suc n >? x 
+cong-shift {n} (β-ƛ-∙ {var x} {var y}) | yes p with suc y ≤? n 
+cong-shift {n} (β-ƛ-∙ {var zero} {var y}) | yes p | yes q with n >? y 
+cong-shift {n} (β-ƛ-∙ {var zero} {var y}) | yes p | yes q | yes r = β-ƛ-∙
+cong-shift {n} (β-ƛ-∙ {var zero} {var y}) | yes p | yes q | no ¬r = ⊥-elim (¬r q)
+cong-shift {n} (β-ƛ-∙ {var suc x} {var y}) | yes p | yes q with n >? suc x 
+cong-shift {n} (β-ƛ-∙ {var suc x} {var y}) | yes p | yes q | yes r = {!   !} -- dump
+cong-shift {n} {i} (β-ƛ-∙ {var suc x} {var y}) | yes p | yes q | no ¬r with suc i >? suc x 
+cong-shift {n} {i} (β-ƛ-∙ {var suc x} {var y}) | yes p | yes q | no ¬r | yes s = {!   !} -- fishy
+cong-shift {n} {i} (β-ƛ-∙ {var suc x} {var y}) | yes p | yes q | no ¬r | no ¬s = {!   !} -- dump
+cong-shift {n} {i} (β-ƛ-∙ {var x} {var y}) | yes p | no ¬q with suc i >? y 
+cong-shift {n} {i} (β-ƛ-∙ {var zero} {var y}) | yes p | no ¬q | yes r with n >? y 
+cong-shift {n} {i} (β-ƛ-∙ {var zero} {var y}) | yes p | no ¬q | yes r | yes s = ⊥-elim (¬q s)
+cong-shift {n} {i} (β-ƛ-∙ {var zero} {var y}) | yes p | no ¬q | yes r | no ¬s with suc i >? y 
+cong-shift {n} {i} (β-ƛ-∙ {var zero} {var y}) | yes p | no ¬q | yes r | no ¬s | yes t = β-ƛ-∙
+cong-shift {n} {i} (β-ƛ-∙ {var zero} {var y}) | yes p | no ¬q | yes r | no ¬s | no ¬t = ⊥-elim (¬t r)
+cong-shift {n} {i} (β-ƛ-∙ {var suc x} {var y}) | yes p | no ¬q | yes r with n >? suc x 
+cong-shift {n} {i} (β-ƛ-∙ {var suc x} {var y}) | yes p | no ¬q | yes r | yes t = {!   !} -- dump 
+cong-shift {n} {i} (β-ƛ-∙ {var suc x} {var y}) | yes p | no ¬q | yes r | no ¬t with suc i >? suc x
+cong-shift {n} {i} (β-ƛ-∙ {var suc x} {var y}) | yes p | no ¬q | yes r | no ¬t | yes u = {!   !} -- fishy 
+cong-shift {n} {i} (β-ƛ-∙ {var suc x} {var y}) | yes p | no ¬q | yes r | no ¬t | no ¬u = β-ƛ-∙
+cong-shift {n} {i} (β-ƛ-∙ {var x} {var y}) | yes p | no ¬q | no ¬r = {!   !}
+cong-shift {n} (β-ƛ-∙ {var x} {var y}) | no ¬p = {!   !}
+cong-shift {n} (β-ƛ-∙ {var x} {ƛ N}) = {!   !}
+cong-shift {n} (β-ƛ-∙ {var x} {N ∙ O}) = {!   !}
+-- cong-shift {n} (β-ƛ-∙ {var x} {N}) with suc n >? x 
+-- cong-shift {n} (β-ƛ-∙ {var zero} {N}) | yes p = β-ƛ-∙
+-- cong-shift {n} (β-ƛ-∙ {var suc x} {N}) | yes (s≤s p) with n >? suc x 
+-- cong-shift {n} (β-ƛ-∙ {var suc x} {N}) | yes (s≤s p) | yes q = {!   !}
+-- cong-shift {n} {i} (β-ƛ-∙ {var suc x} {N}) | yes (s≤s p) | no ¬q with suc i >? suc x 
+-- cong-shift {n} {i} (β-ƛ-∙ {var suc x} {N}) | yes (s≤s p) | no ¬q | yes r = {!   !} -- fishy
+-- cong-shift {n} {i} (β-ƛ-∙ {var suc x} {N}) | yes (s≤s p) | no ¬q | no ¬r = {!   !}
+-- cong-shift {n} (β-ƛ-∙ {var zero} {var x}) | no ¬p = {!   !}
+-- cong-shift {n} (β-ƛ-∙ {var zero} {ƛ N}) | no ¬p = {!   !}
+-- cong-shift {n} (β-ƛ-∙ {var zero} {N ∙ O}) | no ¬p = {!   !}
+-- cong-shift {n} (β-ƛ-∙ {var suc x} {N}) | no ¬p = {!   !}
 cong-shift (β-ƛ-∙ {ƛ M} {N}) = {!   !}
-cong-shift (β-ƛ-∙ {L ∙ M} {N}) = {!   !}
+cong-shift (β-ƛ-∙ {L ∙ var x} {N}) = {!   !}
+cong-shift (β-ƛ-∙ {L ∙ (ƛ M)} {N}) = {!   !}
+cong-shift (β-ƛ-∙ {L ∙ (M ∙ K)} {N}) = {!   !}
 cong-shift (β-ƛ M→N) = β-ƛ (cong-shift M→N)
 cong-shift (β-∙-l M→N) = β-∙-l (cong-shift M→N)
 cong-shift (β-∙-r M→N) = β-∙-r (cong-shift M→N) 
