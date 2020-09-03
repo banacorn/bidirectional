@@ -33,7 +33,7 @@ shift {n} depth (var x) with n >? x
 shift {n} depth (var x) | yes p = var x -- bound 
 shift {n} depth (var x) | no ¬p with depth >? x 
 shift {n} depth (var x) | no ¬p | yes q = var (suc x) -- will be captured, should increment
-shift {n} depth (var x) | no ¬p | no ¬q = var x -- save from capturing
+shift {n} depth (var x) | no ¬p | no ¬q = var x -- safe from being captured
 shift depth (ƛ M) = ƛ shift (suc depth) M
 shift depth (M ∙ N) = shift depth M ∙ shift depth N
 
@@ -180,6 +180,90 @@ cong-∙-r : ∀ {n} {L M N : Term n} → M β→* N → L ∙ M β→* L ∙ N
 cong-∙-r ∎            = ∎
 cong-∙-r (M→N →* N→O) = β-∙-r M→N →* cong-∙-r N→O
 
+cong-shift2 : ∀ {n i} {M N : Term n} → M β→* N → shift (suc i) M β→* shift (suc i) N
+cong-shift2 {n} {i} {var x} {var y} M→N = {!   !}
+cong-shift2 {n} {i} {var x} {ƛ N} M→N = {!   !}
+cong-shift2 {n} {i} {var x} {N ∙ O} M→N = {!   !}
+cong-shift2 {n} {i} {ƛ M} {var x} M→N = {!   !}
+cong-shift2 {n} {i} {ƛ M} {ƛ N} M→N = {!   !}
+cong-shift2 {n} {i} {ƛ M} {N ∙ O} M→N = {!   !}
+cong-shift2 {n} {i} {M ∙ L} {var x} M→N = {!   !}
+cong-shift2 {n} {i} {M ∙ L} {ƛ N} M→N = {!   !}
+cong-shift2 {n} {i} {M ∙ L} {.M ∙ .L} ∎ = ∎
+cong-shift2 {n} {i} {M ∙ L} {N ∙ O} (_→*_ {M = K} M∙L→K K→N∙O) =
+    shift (suc i) (M ∙ L)
+  →*⟨ {!   !} ⟩ 
+    shift (suc i) K
+  →*⟨ cong-shift2 K→N∙O ⟩ 
+    shift (suc i) (N ∙ O)
+  →∎
+-- cong-shift2 {n} {i} {ƛ M} {ƛ N} ((β-ƛ M→N) →* ∎) = β-ƛ (cong-shift2 (hop M→N))
+-- cong-shift2 {n} {i} {M ∙ L} {var x} M→N = {!   !}
+-- cong-shift2 {n} {i} {M ∙ L} {ƛ N} M→N = {!   !}
+-- cong-shift2 {n} {i} {M ∙ L} {N ∙ K} M→N = {!   !}
+
+
+cong-shift3 : ∀ {n i} {M N : Term n} → M β→ N → shift (suc i) M β→ shift (suc i) N
+cong-shift3 {n} {i} {ƛ M} {ƛ N} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ L} {var x} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ L} {ƛ N} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ var x₁} {var x₂ ∙ var x₃} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ var x₁} {var x₂ ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ var x₁} {var x₂ ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ var x₁} {(ƛ N) ∙ var x₂} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ var x₁} {N ∙ N₁ ∙ var x₂} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ (ƛ L)} {var x₁ ∙ var x₂} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ (ƛ L)} {var x₁ ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ (ƛ L)} {var x₁ ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ (ƛ L)} {(ƛ N) ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ (ƛ L)} {N ∙ N₁ ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ (L ∙ L₁)} {var x₁ ∙ var x₂} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ (L ∙ L₁)} {var x₁ ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ (L ∙ L₁)} {var x₁ ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ (L ∙ L₁)} {(ƛ N) ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {var x ∙ (L ∙ L₁)} {N ∙ N₁ ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ var x} {var x₁ ∙ var x₂} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ var x} {var x₁ ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ var x} {var x₁ ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ var x} {(ƛ N) ∙ var x₁} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ var x} {(ƛ N) ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ var x} {(ƛ N) ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ var x} {N ∙ N₁ ∙ var x₁} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ var x} {N ∙ N₁ ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ var x} {N ∙ N₁ ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (ƛ L)} {var x ∙ var x₁} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (ƛ L)} {var x ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (ƛ L)} {var x ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (ƛ L)} {(ƛ N) ∙ var x} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (ƛ L)} {(ƛ N) ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (ƛ L)} {(ƛ N) ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (ƛ L)} {N ∙ N₁ ∙ var x} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (ƛ L)} {N ∙ N₁ ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (ƛ L)} {N ∙ N₁ ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (L ∙ L₁)} {var x ∙ var x₁} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (L ∙ L₁)} {var x ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (L ∙ L₁)} {var x ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (L ∙ L₁)} {(ƛ N) ∙ var x} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (L ∙ L₁)} {(ƛ N) ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (L ∙ L₁)} {(ƛ N) ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (L ∙ L₁)} {N ∙ N₁ ∙ var x} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (L ∙ L₁)} {N ∙ N₁ ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {(ƛ M) ∙ (L ∙ L₁)} {N ∙ N₁ ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ var x} {var x₁ ∙ var x₂} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ var x} {(ƛ N) ∙ var x₁} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ var x} {N ∙ N₁ ∙ var x₁} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ var x} {N ∙ N₁ ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ var x} {N ∙ N₁ ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ (ƛ L)} {var x ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ (ƛ L)} {(ƛ N) ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ (ƛ L)} {N ∙ N₁ ∙ var x} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ (ƛ L)} {N ∙ N₁ ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ (ƛ L)} {N ∙ N₁ ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ (L ∙ L₁)} {var x ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ (L ∙ L₁)} {(ƛ N) ∙ (O ∙ O₁)} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ (L ∙ L₁)} {N ∙ N₁ ∙ var x} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ (L ∙ L₁)} {N ∙ N₁ ∙ (ƛ O)} M→N = {!   !}
+cong-shift3 {n} {i} {M ∙ M₁ ∙ (L ∙ L₁)} {N ∙ N₁ ∙ (O ∙ O₁)} M→N = {!   !}
 
 cong-shift : ∀ {n i} {M N : Term n} → M β→ N → shift (suc i) M β→ shift (suc i) N
 cong-shift {n} (β-ƛ-∙ {var x} {var y}) with suc n >? x 
@@ -236,6 +320,20 @@ cong-[] {i = i} {M} {N} (L ∙ K) M→N =
   →*⟨ cong-∙-l (cong-[] L M→N) ⟩ 
     L [ N / i ] ∙ K [ M / i ] 
   →*⟨ cong-∙-r (cong-[] K M→N) ⟩ 
+    L [ N / i ] ∙ K [ N / i ] 
+  →∎
+
+
+cong-[]* : ∀ {n i} {M N : Term n} → (L : Term (suc n)) → M β→* N → L [ M / i ] β→* L [ N / i ]
+cong-[]* {i = i} (var x) M→N with x ≟ i 
+cong-[]* {i = i} (var x) M→N | yes p = M→N
+cong-[]* {i = i} (var x) M→N | no ¬p = ∎
+cong-[]* (ƛ L) M→N = cong-ƛ (cong-[]* L (cong-shift2 M→N))
+cong-[]* {i = i} {M} {N} (L ∙ K) M→N =
+    L [ M / i ] ∙ K [ M / i ] 
+  →*⟨ cong-∙-l (cong-[]* L M→N) ⟩ 
+    L [ N / i ] ∙ K [ M / i ] 
+  →*⟨ cong-∙-r (cong-[]* K M→N) ⟩ 
     L [ N / i ] ∙ K [ N / i ] 
   →∎
 -- L [ M / i ] ∙ K [ M / i ] β→* L [ N / i ] ∙ K [ N / i ]
@@ -302,14 +400,14 @@ module Temp where
 β→confluent :  ∀ {n} (M N O : Term n) → (M β→ N) → (M β→ O) → ∃ (λ P → (N β→* P) × (O β→* P))
 β→confluent .((ƛ M) ∙ N) _ _ (β-ƛ-∙ {M} {N}) β-ƛ-∙ = (M [ N ]) , (∎ , ∎)
 β→confluent .((ƛ M) ∙ N) _ .(O ∙ N) (β-ƛ-∙ {M} {N}) (β-∙-l {N = O} M→O) = (O ∙ N) , ({!   !} , ∎)
-β→confluent .((ƛ M) ∙ N) _ .((ƛ M) ∙ O) (β-ƛ-∙ {M} {N}) (β-∙-r {N = O} N→O) = (M [ O ]) , (cong-[] M N→O , (hop β-ƛ-∙))
+β→confluent .((ƛ M) ∙ N) _ .((ƛ M) ∙ O) (β-ƛ-∙ {M} {N}) (β-∙-r {N = O} N→O) = (M [ O ]) , (cong-[]* M (hop N→O) , (hop β-ƛ-∙))
 β→confluent .(ƛ M) .(ƛ N) .(ƛ O) (β-ƛ {M} {N} M→N) (β-ƛ {N = O} M→O) with β→confluent M N O M→N M→O 
 β→confluent .(ƛ M) .(ƛ N) .(ƛ O) (β-ƛ {M} {N} M→N) (β-ƛ {N = O} M→O) | P , N→P , O→P = (ƛ P) , ((cong-ƛ N→P) , (cong-ƛ O→P))
 β→confluent .((ƛ M) ∙ L) .(N ∙ L) _ (β-∙-l {L} {N = N} M→N) (β-ƛ-∙ {M}) = (N ∙ L) , (∎ , {!   !})
 β→confluent .(M ∙ L) .(N ∙ L) .(K ∙ L) (β-∙-l {L} {M} {N} M→N) (β-∙-l {N = K} M→O) with β→confluent M N K M→N M→O  
 β→confluent .(M ∙ L) .(N ∙ L) .(K ∙ L) (β-∙-l {L} {M} {N} M→N) (β-∙-l {N = K} M→O) | P , N→P , K→P = P ∙ L , ((cong-∙-l N→P) , cong-∙-l K→P)
 β→confluent .(M ∙ L) .(N ∙ L) .(M ∙ K) (β-∙-l {L} {M} {N} M→N) (β-∙-r {N = K} M→O) = N ∙ K , hop (β-∙-r M→O) , hop (β-∙-l M→N)
-β→confluent .((ƛ L) ∙ M) .((ƛ L) ∙ N) _ (β-∙-r {M = M} {N} M→N) (β-ƛ-∙ {L}) = (L [ N ]) , (hop β-ƛ-∙ , cong-[] L M→N)
+β→confluent .((ƛ L) ∙ M) .((ƛ L) ∙ N) _ (β-∙-r {M = M} {N} M→N) (β-ƛ-∙ {L}) = (L [ N ]) , (hop β-ƛ-∙ , cong-[]* L (hop M→N))
 β→confluent .(K ∙ M) .(K ∙ N) .(L ∙ M) (β-∙-r {K} {M} {N} M→N) (β-∙-l {N = L} K→L) = (L ∙ N) , ((hop (β-∙-l K→L)) , hop (β-∙-r M→N))
 β→confluent .(_ ∙ M) .(_ ∙ N) .(_ ∙ O) (β-∙-r {M = M} {N} M→N) (β-∙-r {N = O} M→O) with β→confluent M N O M→N M→O 
 β→confluent .(L ∙ M) .(L ∙ N) .(L ∙ O) (β-∙-r {L} {M} {N} M→N) (β-∙-r {N = O} M→O) | P , N→P , O→P = (L ∙ P) , (cong-∙-r N→P , cong-∙-r O→P)
