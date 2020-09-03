@@ -5,6 +5,7 @@ open import Data.Nat.Properties using (≤-antisym; ≤-trans; ≰⇒>)
 -- open import Data.List
 open import Data.Empty using (⊥-elim)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; cong₂; subst)
+open import Relation.Nullary.Decidable using (map)
 open import Relation.Nullary 
 open import Data.Product
 
@@ -63,135 +64,145 @@ infixl 10 _[_]
 _[_] : ∀ {n} → Term (suc n) → Term n → Term n
 M [ N ] = M [ N / zero / z≤n ]
 
--- -- β reduction
--- infix 3 _β→_
--- data _β→_ {n : ℕ} : Term n → Term n → Set where 
+-- β reduction
+infix 3 _β→_
+data _β→_ {n : ℕ} : Term n → Term n → Set where 
 
---   β-ƛ-∙ : ∀ {M N} → ((ƛ M) ∙ N) β→ M [ N ]
+  β-ƛ-∙ : ∀ {M N} → ((ƛ M) ∙ N) β→ M [ N ]
 
---   β-ƛ : ∀ {M N} → M β→ N → ƛ M β→ ƛ N
+  β-ƛ : ∀ {M N} → M β→ N → ƛ M β→ ƛ N
 
---   β-∙-l : ∀ {L M N} → M β→ N → M ∙ L β→ N ∙ L
+  β-∙-l : ∀ {L M N} → M β→ N → M ∙ L β→ N ∙ L
 
---   β-∙-r : ∀ {L M N} → M β→ N → L ∙ M β→ L ∙ N
+  β-∙-r : ∀ {L M N} → M β→ N → L ∙ M β→ L ∙ N
 
 
 
--- -- the reflexive and transitive closure of _β→_
--- infix  2 _β→*_ 
--- infixr 4 _→*_
--- data _β→*_ {n : ℕ} : Term n → Term n → Set where
+-- the reflexive and transitive closure of _β→_
+infix  2 _β→*_ 
+infixr 4 _→*_
+data _β→*_ {n : ℕ} : Term n → Term n → Set where
   
 
---   ∎ : ∀ {M} → M β→* M 
+  ∎ : ∀ {M} → M β→* M 
     
---   _→*_ : ∀ {L M N}
---     → L β→  M
---     → M β→* N       
---     --------------
---     → L β→* N
+  _→*_ : ∀ {L M N}
+    → L β→  M
+    → M β→* N       
+    --------------
+    → L β→* N
 
 
--- infixl  3 _<β>_ 
--- _<β>_ : ∀ {n} {M N O : Term n} → M β→* N → N β→* O → M β→* O
--- ∎          <β> N→O = N→O
--- L→M →* M→N <β> N→O = L→M →* (M→N <β> N→O)
+infixl  3 _<β>_ 
+_<β>_ : ∀ {n} {M N O : Term n} → M β→* N → N β→* O → M β→* O
+∎          <β> N→O = N→O
+L→M →* M→N <β> N→O = L→M →* (M→N <β> N→O)
 
 
--- hop : ∀ {n} {M N : Term n} → M β→ N → M β→* N
--- hop M→N = M→N →* ∎
+hop : ∀ {n} {M N : Term n} → M β→ N → M β→* N
+hop M→N = M→N →* ∎
 
 
--- -- infix  2 _-↠_ 
+-- infix  2 _-↠_ 
 
--- infixr 2 _→⟨_⟩_
--- _→⟨_⟩_
---   : ∀ {n} {M N : Term n}
---   → ∀ L
---   → L β→ M       
---   → M β→* N       
---   --------------
---   → L β→* N
--- L →⟨ P ⟩ Q = P →* Q
+infixr 2 _→⟨_⟩_
+_→⟨_⟩_
+  : ∀ {n} {M N : Term n}
+  → ∀ L
+  → L β→ M       
+  → M β→* N       
+  --------------
+  → L β→* N
+L →⟨ P ⟩ Q = P →* Q
 
--- infixr 2 _→*⟨_⟩_
--- _→*⟨_⟩_
---   : ∀ {n} {M N : Term n}
---   → ∀ L
---   → L β→* M       
---   → M β→* N       
---   --------------
---   → L β→* N
--- L →*⟨ P ⟩ Q = P <β> Q
+infixr 2 _→*⟨_⟩_
+_→*⟨_⟩_
+  : ∀ {n} {M N : Term n}
+  → ∀ L
+  → L β→* M       
+  → M β→* N       
+  --------------
+  → L β→* N
+L →*⟨ P ⟩ Q = P <β> Q
 
--- infix 3 _→∎
--- _→∎ : ∀ {n} (M : Term n) → M β→* M 
--- M →∎ = ∎
-
-
--- -- the symmetric closure of _β→*_
-
--- infix  1 _β≡_ 
--- data _β≡_ {n : ℕ} : Term n → Term n → Set where
---   β-sym : ∀ {M N}
---     → M β→* N
---     → N β→* M
---     -------
---     → M β≡ N
+infix 3 _→∎
+_→∎ : ∀ {n} (M : Term n) → M β→* M 
+M →∎ = ∎
 
 
--- infixr 2 _=*⟨_⟩_
--- _=*⟨_⟩_
---   : ∀ {n} {M N : Term n} 
---   → ∀ L
---   → L β≡ M       
---   → M β≡ N       
---   --------------
---   → L β≡ N
--- L =*⟨ β-sym A B ⟩ β-sym C D = β-sym (A <β> C) (D <β> B)
+-- the symmetric closure of _β→*_
 
--- infixr 2 _=*⟨⟩_
--- _=*⟨⟩_
---   : ∀ {n} {N : Term n}          
---   → ∀ L
---   → L β≡ N      
---   --------------
---   → L β≡ N
--- L =*⟨⟩ β-sym C D = β-sym C D
-
--- infix 3 _=∎
--- _=∎ : ∀ {n} → (M : Term n) → M β≡ M 
--- M =∎ = β-sym ∎ ∎
+infix  1 _β≡_ 
+data _β≡_ {n : ℕ} : Term n → Term n → Set where
+  β-sym : ∀ {M N}
+    → M β→* N
+    → N β→* M
+    -------
+    → M β≡ N
 
 
--- forward : ∀ {n} {M N : Term n} → M β≡ N → M β→* N
--- forward (β-sym A _) = A
+infixr 2 _=*⟨_⟩_
+_=*⟨_⟩_
+  : ∀ {n} {M N : Term n} 
+  → ∀ L
+  → L β≡ M       
+  → M β≡ N       
+  --------------
+  → L β≡ N
+L =*⟨ β-sym A B ⟩ β-sym C D = β-sym (A <β> C) (D <β> B)
 
--- backward : ∀ {n} {M N : Term n} → M β≡ N → N β→* M
--- backward (β-sym _ B) = B
+infixr 2 _=*⟨⟩_
+_=*⟨⟩_
+  : ∀ {n} {N : Term n}          
+  → ∀ L
+  → L β≡ N      
+  --------------
+  → L β≡ N
+L =*⟨⟩ β-sym C D = β-sym C D
 
--- -- data Normal : Set where 
-
--- Normal : ∀ {n} → Term n → Set 
--- Normal M = ¬ ∃ (λ N → M β→ N)
-
--- normal : ∀ {n} {M N : Term n} → Normal M → M β→* N → M ≡ N 
--- normal P ∎            = refl
--- normal P (M→L →* L→N) = ⊥-elim (P (_ , M→L))
+infix 3 _=∎
+_=∎ : ∀ {n} → (M : Term n) → M β≡ M 
+M =∎ = β-sym ∎ ∎
 
 
--- cong-ƛ : ∀ {n} {M N : Term (suc n)} → M β→* N → ƛ M β→* ƛ N
--- cong-ƛ ∎            = ∎
--- cong-ƛ (M→N →* N→O) = β-ƛ M→N →* cong-ƛ N→O
+forward : ∀ {n} {M N : Term n} → M β≡ N → M β→* N
+forward (β-sym A _) = A
 
--- cong-∙-l : ∀ {n} {L M N : Term n} → M β→* N → M ∙ L β→* N ∙ L
--- cong-∙-l ∎            = ∎
--- cong-∙-l (M→N →* N→O) = β-∙-l M→N →* cong-∙-l N→O
+backward : ∀ {n} {M N : Term n} → M β≡ N → N β→* M
+backward (β-sym _ B) = B
 
--- cong-∙-r : ∀ {n} {L M N : Term n} → M β→* N → L ∙ M β→* L ∙ N
--- cong-∙-r ∎            = ∎
--- cong-∙-r (M→N →* N→O) = β-∙-r M→N →* cong-∙-r N→O
+-- data Normal : Set where 
 
+Normal : ∀ {n} → Term n → Set 
+Normal M = ¬ ∃ (λ N → M β→ N)
+
+normal : ∀ {n} {M N : Term n} → Normal M → M β→* N → M ≡ N 
+normal P ∎            = refl
+normal P (M→L →* L→N) = ⊥-elim (P (_ , M→L))
+
+
+cong-ƛ : ∀ {n} {M N : Term (suc n)} → M β→* N → ƛ M β→* ƛ N
+cong-ƛ ∎            = ∎
+cong-ƛ (M→N →* N→O) = β-ƛ M→N →* cong-ƛ N→O
+
+cong-∙-l : ∀ {n} {L M N : Term n} → M β→* N → M ∙ L β→* N ∙ L
+cong-∙-l ∎            = ∎
+cong-∙-l (M→N →* N→O) = β-∙-l M→N →* cong-∙-l N→O
+
+cong-∙-r : ∀ {n} {L M N : Term n} → M β→* N → L ∙ M β→* L ∙ N
+cong-∙-r ∎            = ∎
+cong-∙-r (M→N →* N→O) = β-∙-r M→N →* cong-∙-r N→O
+
+cong-shift! : ∀ {n i} (M : Term (suc n)) (N : Term n) → (n≥i : n ≥ i) → shift (suc i) (s≤s n≥i) ((ƛ M) ∙ N) β→ shift (suc i) (s≤s n≥i) (M [ N ])
+cong-shift! (var x) N n≥i = {!   !}
+cong-shift! (ƛ M) N n≥i = {!   !}
+cong-shift! (M ∙ L) N n≥i = {!   !}
+
+cong-shift : ∀ {n i} {M N : Term n} → (n≥i : n ≥ i) → M β→ N → shift (suc i) (s≤s n≥i) M β→ shift (suc i) (s≤s n≥i) N
+cong-shift n≥i (β-ƛ-∙ {M} {N}) = cong-shift! M N n≥i
+cong-shift n≥i (β-ƛ M→N) = β-ƛ (cong-shift (s≤s n≥i) M→N)
+cong-shift n≥i (β-∙-l M→N) = β-∙-l (cong-shift n≥i M→N)
+cong-shift n≥i (β-∙-r M→N) = β-∙-r (cong-shift n≥i M→N)
 
 -- cong-shift : ∀ {n i} {M N : Term n} → n ≥ i → M β→ N → shift (suc i) M β→ shift (suc i) N
 -- cong-shift {n} n≥i (β-ƛ-∙ {var x} {var y}) with suc n >? x 
