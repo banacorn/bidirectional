@@ -1,7 +1,7 @@
 module STLC3 where 
 
 open import Data.Nat
-open import Data.Nat.Properties using (≤-antisym; ≰⇒>)
+open import Data.Nat.Properties using (≤-antisym; ≤-trans; ≰⇒>)
 -- open import Data.List
 open import Data.Empty using (⊥-elim)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; cong₂; subst)
@@ -28,40 +28,40 @@ data Term : ℕ → Set where
 
 data Var : Set where  
   Bound : ∀ {n x} → (bound : n > x) → Var 
-  FreeIncr : ∀ {n x depth} → (free : suc x ≰ n) → (unsafe : suc x ≤ depth) → Var 
+  FreeIncr : ∀ {n x depth} → (free : suc x ≰ n) → (prop : depth ≡ suc x) → Var 
   Free : ∀ {n x depth} →(free : suc x ≰ n) → (safe : suc x ≰ depth) → Var 
 
-sort : (n x depth : ℕ) → Var 
-sort n x depth with n >? x 
-sort n x depth | yes p = Bound p
-sort n x depth | no ¬p with depth >? x 
-sort n x depth | no ¬p | yes q = FreeIncr ¬p q
-sort n x depth | no ¬p | no ¬q = Free ¬p ¬q
+sort : (n x depth : ℕ) → suc n ≥ depth → Var 
+sort n x depth P with n >? x 
+sort n x depth P | yes p = Bound p
+sort n x depth P | no ¬p with depth >? x 
+sort n x depth P | no ¬p | yes q = FreeIncr ¬p (≤-antisym (≤-trans P (≰⇒> ¬p)) q)
+sort n x depth P | no ¬p | no ¬q = Free ¬p ¬q
 
 -- only "shift" the variable when 
 --  1. it's free
 --  2. it will be captured after substitution
-shift : ∀ {n} → ℕ → Term n → Term (suc n)
-shift {n} depth (var x) with sort n x depth
-shift {n} depth (var x) | Bound bound = var x
-shift {n} depth (var x) | FreeIncr free unsafe = var (suc x)
-shift {n} depth (var x) | Free free safe = var x
-shift depth (ƛ M) = ƛ shift (suc depth) M
-shift depth (M ∙ N) = shift depth M ∙ shift depth N
+shift : ∀ {n} → (i : ℕ) → suc n ≥ i → Term n → Term (suc n)
+shift {n} depth P (var x) with sort n x depth P
+shift {n} depth P (var x) | Bound bound = var x
+shift {n} depth P (var x) | FreeIncr free prop = var suc x
+shift {n} depth P (var x) | Free free safe = var x
+shift depth P (ƛ M) = ƛ shift (suc depth) (s≤s P) M
+shift depth P (M ∙ N) = shift depth P M ∙ shift depth P N
 
 
-infixl 10 _[_/_]
-_[_/_] : ∀ {n} → Term (suc n) → Term n → ℕ → Term n
-(var x)   [ N / i ] with x ≟ i
-(var x)   [ N / i ] | yes p = N
-(var x)   [ N / i ] | no ¬p = var x
-(ƛ M)     [ N / i ] = ƛ (M [ shift (suc i) N / suc i ])
-(L ∙ M)   [ N / i ] = L [ N / i ] ∙ M [ N / i ]
+infixl 10 _[_/_/_]
+_[_/_/_] : ∀ {n} → Term (suc n) → Term n → (i : ℕ) → n ≥ i → Term n
+(var x)   [ N / i / n≥i ] with x ≟ i
+(var x)   [ N / i / n≥i ] | yes p = N
+(var x)   [ N / i / n≥i ] | no ¬p = var x
+(ƛ M)     [ N / i / n≥i ] = ƛ (M [ shift (suc i) (s≤s n≥i) N / suc i / s≤s n≥i ])
+(L ∙ M)   [ N / i / n≥i ] = L [ N / i / n≥i ] ∙ M [ N / i / n≥i ]
 
 -- substitution
 infixl 10 _[_]
 _[_] : ∀ {n} → Term (suc n) → Term n → Term n
-M [ N ] = M [ N / zero ]
+M [ N ] = M [ N / zero / z≤n ]
 
 -- -- β reduction
 -- infix 3 _β→_
