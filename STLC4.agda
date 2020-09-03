@@ -248,3 +248,70 @@ module Example where
     →⟨⟩ 
       ƛ (ƛ var 1 ∙ var 0)
     →∎
+
+
+
+-- lemmas 
+
+
+
+cong-ƛ : {M N : Term} → M β→* N → ƛ M β→* ƛ N
+cong-ƛ ∎            = ∎
+cong-ƛ (M→N →* N→O) = β-ƛ M→N →* cong-ƛ N→O
+
+cong-∙-l : {L M N : Term} → M β→* N → M ∙ L β→* N ∙ L
+cong-∙-l ∎            = ∎
+cong-∙-l (M→N →* N→O) = β-∙-l M→N →* cong-∙-l N→O
+
+cong-∙-r : {L M N : Term} → M β→* N → L ∙ M β→* L ∙ N
+cong-∙-r ∎            = ∎
+cong-∙-r (M→N →* N→O) = β-∙-r M→N →* cong-∙-r N→O
+
+
+cong-shift : (free i : ℕ) → (M N : Term) → M β→ N → shift free i M β→* shift free i N
+cong-shift free i (ƛ M) (ƛ N) (β-ƛ M→N) = cong-ƛ (cong-shift (suc free) i M N M→N)
+cong-shift free i (M ∙ L) (var x) M→N = {!   !}
+cong-shift free i (M ∙ L) (ƛ N)   M→N = {!   !}
+cong-shift free i (M ∙ L) (N ∙ O) M→N = {!   !}
+
+cong-[] : ∀ {i M N} (L : Term) → M β→ N → L [ M / i ] β→* L [ N / i ]
+cong-[] {i} (var x) M→N with compare x i
+cong-[] {.(suc (x + k))} (var x) M→N  | less .x k = ∎
+cong-[] {.x} {M} {N} (var x) M→N | equal .x = cong-shift 0 x M N M→N
+cong-[] {.m} (var .(suc (m + k))) M→N | greater m k = ∎
+cong-[] (ƛ L) M→N = cong-ƛ (cong-[] L M→N)
+cong-[] {i} {M} {N} (L ∙ K) M→N = 
+    L [ M / i ] ∙ K [ M / i ]
+  →*⟨ cong-∙-l (cong-[] L M→N) ⟩
+    L [ N / i ] ∙ K [ M / i ]
+  →*⟨ cong-∙-r (cong-[] K M→N) ⟩
+    L [ N / i ] ∙ K [ N / i ]
+  →∎
+
+-- single-step
+β→confluent : ∀ {M N O} → (M β→ N) → (M β→ O) → ∃ (λ P → (N β→* P) × (O β→* P))
+β→confluent β-ƛ-∙ β-ƛ-∙ = {!   !}
+β→confluent β-ƛ-∙ (β-∙-l M→O) = {!   !}
+β→confluent β-ƛ-∙ (β-∙-r M→O) = {!   !}
+β→confluent (β-ƛ M→N) (β-ƛ M→O) = {!   !}
+β→confluent (β-∙-l M→N) β-ƛ-∙ = {!   !}
+β→confluent (β-∙-l M→N) (β-∙-l M→O) = {!   !}
+β→confluent (β-∙-l M→N) (β-∙-r M→O) = {!   !}
+β→confluent (β-∙-r {M = M} {N} M→N) (β-ƛ-∙ {L}) = L [ N ] , (hop β-ƛ-∙) , cong-[] L M→N
+β→confluent (β-∙-r {L} {M} {N} M→N) (β-∙-l {N = O} M→O) = O ∙ N , hop (β-∙-l M→O) , hop (β-∙-r M→N)
+β→confluent (β-∙-r {M = M} {N} M→N) (β-∙-r {N = O} M→O) with β→confluent M→N M→O 
+β→confluent (β-∙-r {L} {M} {N} M→N) (β-∙-r {N = O} M→O) | P , N→P , O→P = (L ∙ P) , cong-∙-r N→P , cong-∙-r O→P
+
+
+-- β→confluent : (M N O : Term) → (M β→ N) → (M β→ O) → ∃ (λ P → (N β→* P) × (O β→* P))
+-- β→confluent .((ƛ _) ∙ _) ._           ._            β-ƛ-∙ β-ƛ-∙ = {!   !}
+-- β→confluent .((ƛ _) ∙ _) ._           .(_ ∙ _)      β-ƛ-∙ (β-∙-l M→O) = {!   !}
+-- β→confluent .((ƛ _) ∙ _) ._           .((ƛ _) ∙ _)  β-ƛ-∙ (β-∙-r M→O) = {!   !}
+-- β→confluent .(ƛ _)       .(ƛ _)       .(ƛ _)        (β-ƛ M→N) (β-ƛ M→O) = {!   !}
+-- β→confluent .((ƛ _) ∙ _) .(_ ∙ _)     ._            (β-∙-l M→N) β-ƛ-∙ = {!   !}
+-- β→confluent .(_ ∙ _)     .(_ ∙ _)     .(_ ∙ _)      (β-∙-l M→N) (β-∙-l M→O) = {!   !}
+-- β→confluent .(_ ∙ _)     .(_ ∙ _)     .(_ ∙ _)      (β-∙-l M→N) (β-∙-r M→O) = {!   !}
+-- β→confluent .((ƛ _) ∙ _) .((ƛ _) ∙ _) ._            (β-∙-r M→N) β-ƛ-∙ = {!   !}
+-- β→confluent .(_ ∙ _)     .(_ ∙ _)     .(_ ∙ _)      (β-∙-r M→N) (β-∙-l M→O) = {!   !}
+-- β→confluent .(_ ∙ M)     .(_ ∙ N)     .(_ ∙ O)      (β-∙-r {M = M} {N} M→N) (β-∙-r {N = O} M→O) with β→confluent M N O M→N M→O 
+-- β→confluent .(_ ∙ M)     .(_ ∙ N)     .(_ ∙ O)      (β-∙-r {M = M} {N} M→N) (β-∙-r {N = O} M→O) | P , N→P , O→P = {!   !}
