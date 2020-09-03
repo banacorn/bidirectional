@@ -267,12 +267,100 @@ cong-∙-r : {L M N : Term} → M β→* N → L ∙ M β→* L ∙ N
 cong-∙-r ∎            = ∎
 cong-∙-r (M→N →* N→O) = β-∙-r M→N →* cong-∙-r N→O
 
+-- shift-subst : ∀ freeM i n M N → (shift (suc (suc free)) i M) [ shift free i N / n ] β→* shift (suc free) i (M [ N / n ])
+
+shift-subst : ∀ free i n M N → (shift (suc (suc free)) i M) [ shift free i N / n ] β→* shift (suc free) i (M [ N / n ])
+shift-subst free i n (var x) N with compare x n 
+shift-subst free i .(suc (x + k)) (var x) N | less .x k with x ≥? suc free 
+shift-subst free i .(suc (x + k)) (var x) N | less .x k | yes p with suc (suc free) ≤? x 
+shift-subst free i .(suc (x + k)) (var x) N | less .x k | yes p | yes q = ?
+shift-subst free i .(suc (x + k)) (var x) N | less .x k | yes p | no ¬q = {!   !}
+shift-subst free i .(suc (x + k)) (var x) N | less .x k | no ¬p = {!   !}
+shift-subst free i n (var .n) N | equal .n = {!   !}
+shift-subst free i n (var .(suc (n + k))) N | greater .n k = {!   !}
+  --   (shift (suc (suc free)) i (var x)) [ shift free i N / n ]
+  -- →*⟨ {!   !} ⟩ 
+  --   {!   !}
+  -- →*⟨ {!   !} ⟩ 
+  --   {!   !}
+  -- →*⟨ {!   !} ⟩ 
+  --   shift (suc free) i ((var x) [ N / n ])
+  -- →∎ 
+
+-- (shift (suc (suc free)) i (var x) | x ≥? suc (suc free)) [ shift free i N / n ]
+
+-- shift (suc free) i ((var x) [ N / n ] | compare x n)
+shift-subst free i n (ƛ M) N = 
+    ƛ (shift (suc (suc (suc free))) i M [ shift free i N / suc n ])
+  →*⟨ cong-ƛ {! shift-subst (suc free) i (suc n) M N  !} ⟩ 
+    {!   !}
+  →*⟨ {!   !} ⟩ 
+    ƛ (shift (suc (suc (suc free))) i M [ shift (suc free) i N / suc n ])
+  →*⟨ cong-ƛ (shift-subst (suc free) i (suc n) M N) ⟩ 
+    ƛ (shift (suc (suc free)) i (M [ N / suc n ]))
+  →∎ 
+shift-subst free i n (M ∙ L) N = 
+    shift (suc (suc free)) i M [ shift free i N / n ] ∙ shift (suc (suc free)) i L [ shift free i N / n ]
+  →*⟨ cong-∙-l (shift-subst free i n M N) ⟩ 
+    shift (suc free) i (M [ N / n ]) ∙ shift (suc (suc free)) i L [ shift free i N / n ]
+  →*⟨ cong-∙-r (shift-subst free i n L N) ⟩ 
+    shift (suc free) i (M [ N / n ]) ∙ shift (suc free) i (L [ N / n ])
+  →∎ 
+  
+-- shift-subst free i (M ∙ L) (var y) = 
+--     shift (suc (suc free)) i M [ shift free i (var y) / 1 ] ∙ shift (suc (suc free)) i L [ shift free i (var y) / 1 ]
+--   →*⟨ cong-∙-l (shift-subst free i M (var y)) ⟩ 
+--     shift (suc free) i (M [ var y / 1 ]) ∙ shift (suc (suc free)) i L [ shift free i (var y) / 1 ]
+--   →*⟨ cong-∙-r (shift-subst free i L (var y)) ⟩ 
+--     shift (suc free) i (M [ var y / 1 ]) ∙ shift (suc free) i (L [ var y / 1 ])
+--   →∎ 
+-- shift-subst free i (M ∙ L) (ƛ N) = 
+--     shift (suc (suc free)) i M [ ƛ shift (suc free) i N / 1 ] ∙ shift (suc (suc free)) i L [ ƛ shift (suc free) i N / 1 ]
+--   →*⟨ cong-∙-l (shift-subst free i M (ƛ N)) ⟩ 
+--     shift (suc free) i (M [ ƛ N / 1 ]) ∙ shift (suc (suc free)) i L [ ƛ shift (suc free) i N / 1 ]
+--   →*⟨ cong-∙-r (shift-subst free i L (ƛ N)) ⟩ 
+--     shift (suc free) i (M [ ƛ N / 1 ]) ∙ shift (suc free) i (L [ ƛ N / 1 ])
+--   →∎ 
+-- shift-subst free i (M ∙ L) (N ∙ O) = 
+--     shift (suc (suc free)) i M [ shift free i N ∙ shift free i O / 1 ] ∙ shift (suc (suc free)) i L [ shift free i N ∙ shift free i O / 1 ] 
+--   →*⟨ cong-∙-l (shift-subst free i M (N ∙ O)) ⟩ 
+--     shift (suc free) i (M [ N ∙ O / 1 ]) ∙ shift (suc (suc free)) i L [ shift free i N ∙ shift free i O / 1 ]
+--   →*⟨ cong-∙-r (shift-subst free i L (N ∙ O)) ⟩ 
+--     shift (suc free) i (M [ N ∙ O / 1 ]) ∙ shift (suc free) i (L [ N ∙ O / 1 ])
+--   →∎ 
+
+cong-shift-app0 : (free i : ℕ) → (M N : Term) → shift free i ((ƛ M) ∙ N) β→* shift free i (M [ N ])
+cong-shift-app0 free i (var x) N = {!   !}
+cong-shift-app0 free i (ƛ M) N = 
+    (ƛ (ƛ shift (suc (suc free)) i M)) ∙ shift free i N
+  →*⟨ hop β-ƛ-∙ ⟩
+    (ƛ shift (suc (suc free)) i M) [ shift free i N / 0 ]
+  →⟨⟩
+    ƛ (shift (suc (suc free)) i M) [ shift free i N / 1 ]
+  →*⟨ cong-ƛ {!   !} ⟩
+    ƛ shift (suc free) i (M [ N / 1 ])
+  →∎
+-- (ƛ (ƛ shift (suc (suc free)) i M)) ∙ shift free i N β→*
+--       ƛ shift (suc free) i (M [ N / 1 ])
+cong-shift-app0 free i (M ∙ L) N = {!   !}
+
+cong-shift-app : (free i : ℕ) → (M N : Term) → shift free i ((ƛ M) ∙ N) β→* shift free i (M [ N ])
+cong-shift-app free i (var x) (var y) = {!   !}
+cong-shift-app free i (var x) (ƛ N)   = {!   !}
+cong-shift-app free i (var x) (N ∙ O) = {!   !}
+cong-shift-app free i (ƛ M)   (var y) = {!   !}
+cong-shift-app free i (ƛ M)   (ƛ N)   = {!   !}
+cong-shift-app free i (ƛ M)   (N ∙ O) = {!   !}
+cong-shift-app free i (M ∙ L) (var y) = {!   !}
+cong-shift-app free i (M ∙ L) (ƛ N)   = {!   !}
+cong-shift-app free i (M ∙ L) (N ∙ O) = {!   !}
+
 
 cong-shift : (free i : ℕ) → (M N : Term) → M β→ N → shift free i M β→* shift free i N
 cong-shift free i (ƛ M) (ƛ N) (β-ƛ M→N) = cong-ƛ (cong-shift (suc free) i M N M→N)
-cong-shift free i (M ∙ L) (var x) M→N = {!   !}
-cong-shift free i (M ∙ L) (ƛ N)   M→N = {!   !}
-cong-shift free i (M ∙ L) (N ∙ O) M→N = {!   !}
+cong-shift free i (.(ƛ M) ∙ N) .(M [ N / 0 ]) (β-ƛ-∙ {M}) = cong-shift-app free i M N
+cong-shift free i (M ∙ L) .(N ∙ L) (β-∙-l {N = N} M→N) = cong-∙-l (cong-shift free i M N M→N)
+cong-shift free i (M ∙ L) .(M ∙ N) (β-∙-r {N = N} M→N) = cong-∙-r (cong-shift free i L N M→N)
 
 cong-[] : ∀ {i M N} (L : Term) → M β→ N → L [ M / i ] β→* L [ N / i ]
 cong-[] {i} (var x) M→N with compare x i
