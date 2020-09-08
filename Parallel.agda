@@ -19,12 +19,15 @@ data Term : Set where
 
 open import Relation.Nullary 
 
+shift-var : (n i x : ℕ) → ℕ 
+shift-var zero    i x       = x + i  -- free 
+shift-var (suc n) i zero    = zero   -- bound
+shift-var (suc n) i (suc x) = suc (shift-var n i x)
+
 shift : (n i : ℕ) → Term → Term
-shift free i (var x) with x ≥? free 
-shift free i (var x) | yes p = var (x + i) -- free 
-shift free i (var x) | no ¬p = var x -- bound
-shift free i (ƛ M)   = ƛ shift (suc free) i M
-shift free i (M ∙ N) = shift free i M ∙ shift free i N
+shift n i (var x) = var (shift-var n i x)
+shift n i (ƛ M)   = ƛ shift (suc n) i M
+shift n i (M ∙ N) = shift n i M ∙ shift n i N
 
 infixl 10 _[_/_]
 _[_/_] : Term → Term → ℕ → Term
@@ -152,12 +155,6 @@ module Example where
 
   PLUS : Term 
   PLUS = ƛ ƛ ƛ ƛ var 3 ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var 0)
-
-
--- shift-var : (n i x : ℕ) → ℕ
--- shift-var zero    i x       = x + i -- every variables are deemed free regardless of its index
--- shift-var (suc n) i zero    = zero  -- bound
--- shift-var (suc n) i (suc x) = shift-var n (suc i) x
 
   test-2 : PLUS ∙ Z ∙ SZ IsRelatedTo SZ
   test-2 = 
