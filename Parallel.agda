@@ -93,6 +93,11 @@ to-parallel (β-ƛ M→N)   = β-ƛ (to-parallel M→N)
 to-parallel (β-∙-l M→N) = β-∙ (to-parallel M→N) β⇒identity
 to-parallel (β-∙-r M→N) = β-∙ β⇒identity (to-parallel M→N)
 
+open import Relation.Binary.PropositionalEquality hiding ([_]; preorder)
+
+cong-var : ∀ {x y} → x ≡ y → var x β→* var y
+cong-var {x} {y} refl = ε
+
 cong-ƛ : {M N : Term} → M β→* N → ƛ M β→* ƛ N
 cong-ƛ = gmap _ β-ƛ
 
