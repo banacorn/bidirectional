@@ -19,6 +19,8 @@ data Term : Set where
 
 open import Relation.Nullary 
 
+
+
 shift-var : (n i x : ℕ) → ℕ 
 shift-var zero    i x       = x + i  -- free 
 shift-var (suc n) i zero    = zero   -- bound
