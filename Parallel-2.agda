@@ -7,7 +7,8 @@ open import Relation.Nullary
 open import Relation.Nullary.Negation using (contraposition)
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive 
 open import Relation.Binary.PropositionalEquality hiding ([_])
-
+open import Data.Nat.Properties
+open import Agda.Builtin.Bool
 
 x+i+j≡x+j+i : ∀ x j {i} → x + i + j ≡ x + j + i
 x+i+j≡x+j+i x j {i} = 
@@ -26,6 +27,10 @@ x+i+j≡x+j+i x j {i} =
 module CMP where
   open import Data.Nat.Properties      
   open ≤-Reasoning
+
+  1+x+k+n>x : ∀ {x k n} → suc (x + k + n) > x
+  1+x+k+n>x {zero} = s≤s z≤n
+  1+x+k+n>x {suc x} = s≤s 1+x+k+n>x
 
   2+x+k+n>x : ∀ {x k n} → suc (suc (x + k + n)) > x
   2+x+k+n>x {zero}  {k} {n} = s≤s z≤n
@@ -120,7 +125,7 @@ module ShiftVar where
   shift-var-lemma-> {suc n} {i} {zero}  n>x       = refl
   shift-var-lemma-> {suc n} {i} {suc x} (s≤s n>x) = cong suc (shift-var-lemma-> n>x)
 
-  open import Agda.Builtin.Bool
+  
 
   shift-shift-var-l-m'-0' : ∀ n i x m → shift-var n i x + m ≡ shift-var (m + n) i (x + m)
   shift-shift-var-l-m'-0' n i x m with n ≤? x
@@ -159,11 +164,64 @@ shift-shift-l-m' l m n i (M ∙ N) = cong-∙ (shift-shift-l-m' l m n i M) (shif
 -- shift-shift-l-m' : ∀ l m n i N → shift l m (shift (l + n) i N) β→* shift (l + m + n) i (shift l m N)
 
 -- shift (suc (suc (m + n))) i (var x) [ ƛ shift (suc n) i N / suc m ] β→* shift (suc m + n) i ((var x) [ ƛ N / suc m ])
-cong-shift-app-2-m-0 : ∀ m n i x N → shift (suc (suc (m + n))) i (var x) [ ƛ shift (suc n) i N / suc m ] β→* shift (suc m + n) i ((var x) [ ƛ N / suc m ])
+-- cong-shift-app-2-m-0 : ∀ m n i x N → shift (suc (suc (m + n))) i (var x) [ ƛ shift (suc n) i N / suc m ] β→* shift (suc m + n) i ((var x) [ ƛ N / suc m ])
+-- cong-shift-app-2-m-0 m n i x N with compare x (suc m)
+-- cong-shift-app-2-m-0 m n i x N | less .x k rewrite sym (ShiftVar.shift-var-lemma-> {suc (suc (x + k + n))} {i} {x} CMP.2+x+k+n>x) = {!   !}
+-- cong-shift-app-2-m-0 m n i x N | equal .(suc m) = {!   !}
+-- cong-shift-app-2-m-0 m n i x N | greater .(suc m) k = {!   !}
+
+
+cong-shift-app-2-m-0-prop-1 : ∀ n i x k → shift-var (suc (suc (x + k + n))) i x ≡ x
+cong-shift-app-2-m-0-prop-1 n i x k = sym (ShiftVar.shift-var-lemma-> {suc (suc (x + k + n))} {i} {x} CMP.2+x+k+n>x)
+
+cong-shift-app-2-m-0-prop-2 : ∀ x k → compare x (suc (x + k)) ≡ less x k
+cong-shift-app-2-m-0-prop-2 zero k = refl
+cong-shift-app-2-m-0-prop-2 (suc x) k rewrite cong-shift-app-2-m-0-prop-2 x k = refl
+
+cong-shift-app-2-m-0-prop-3 : ∀ m n i → shift-var (suc (m + n)) i m ≡ m
+cong-shift-app-2-m-0-prop-3 m n i = sym (ShiftVar.shift-var-lemma-> {suc (m + n)} {i} {m} (s≤s (m≤m+n m n)))
+
+cong-shift-app-2-m-0-prop-4 : ∀ m → compare m m ≡ equal m 
+cong-shift-app-2-m-0-prop-4 zero = refl
+cong-shift-app-2-m-0-prop-4 (suc m) rewrite cong-shift-app-2-m-0-prop-4 m = refl
+
+
+cong-shift-app-2-m-0-prop-5 : ∀ m n k i → m + n ≤ m + k → shift-var (m + n) i (m + k) ≡ m + (k + i)
+cong-shift-app-2-m-0-prop-5 m n k i m+n≤m+k = 
+    shift-var (m + n) i (m + k) 
+  ≡⟨ sym (ShiftVar.shift-var-lemma-≤ i m+n≤m+k) ⟩ 
+    i + (m + k) 
+  ≡⟨ +-comm i (m + k) ⟩ 
+    m + k + i 
+  ≡⟨ +-assoc m k i ⟩ 
+    m + (k + i) ∎
+  where 
+    open ≡-Reasoning
+
+cong-shift-app-2-m-0-prop-6 : ∀ m i k → compare (suc (m + (k + i))) m ≡ greater m (k + i)
+cong-shift-app-2-m-0-prop-6 zero    i k = refl
+cong-shift-app-2-m-0-prop-6 (suc m) i k rewrite cong-shift-app-2-m-0-prop-6 m i k = refl
+
+cong-shift-app-2-m-0-prop-7 : ∀ m n k i → m + n ≰ m + k → shift-var (m + n) i (m + k) ≡ m + k
+cong-shift-app-2-m-0-prop-7 m n k i rel = sym (ShiftVar.shift-var-lemma-> {m + n} {i} {m + k} (≰⇒> rel))
+
+cong-shift-app-2-m-0-prop-8 : ∀ m k → compare (suc (m + k)) m ≡ greater m k
+cong-shift-app-2-m-0-prop-8 zero    k = refl 
+cong-shift-app-2-m-0-prop-8 (suc m) k rewrite cong-shift-app-2-m-0-prop-8 m k = refl 
+
+cong-shift-app-2-m-0 : ∀ m n i x N → subst-var (ƛ shift (suc n) i N) (compare (shift-var (suc (suc (m + n))) i x) (suc m)) β→* shift (suc (m + n)) i (subst-var (ƛ N) (compare x (suc m)))
 cong-shift-app-2-m-0 m n i x N with compare x (suc m)
-cong-shift-app-2-m-0 m n i x N | less .x k rewrite sym (ShiftVar.shift-var-lemma-> {suc (suc (x + k + n))} {i} {x} CMP.2+x+k+n>x) = {!   !}
-cong-shift-app-2-m-0 m n i x N | equal .(suc m) = {!   !}
-cong-shift-app-2-m-0 m n i x N | greater .(suc m) k = {!   !}
+... | less    .x       k rewrite cong-shift-app-2-m-0-prop-1 n i x k 
+                               | cong-shift-app-2-m-0-prop-2 x k 
+                               = cong-var (ShiftVar.shift-var-lemma-> {suc (x + k + n)} {i} {x} CMP.1+x+k+n>x)
+... | equal   .(suc m)   rewrite cong-shift-app-2-m-0-prop-3 m n i 
+                               | cong-shift-app-2-m-0-prop-4 m 
+                               = cong-ƛ (shift-shift-l-m' 1 (suc m) n i N)
+... | greater .(suc m) k with m + n ≤? m + k
+... | true because ofʸ p rewrite cong-shift-app-2-m-0-prop-5 m n k i p
+                               | cong-shift-app-2-m-0-prop-6 m i k = ε
+... | false because ofⁿ ¬p rewrite cong-shift-app-2-m-0-prop-7 m n k i ¬p 
+                               | cong-shift-app-2-m-0-prop-8 m k = ε
 
 --  compare (shift-var (suc (suc (x + k + n))) i x) (suc (x + k)))
 cong-shift-app-2-m : ∀ m n i M N → shift (suc (suc (m + n))) i M [ ƛ shift (suc n) i N / suc m ] β→* shift (suc m + n) i (M [ ƛ N / suc m ])

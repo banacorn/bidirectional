@@ -35,12 +35,14 @@ shift n i (var x) = var (shift-var n i x)
 shift n i (ƛ M)   = ƛ shift (suc n) i M
 shift n i (M ∙ N) = shift n i M ∙ shift n i N
 
+subst-var : ∀ {x i} → Term → Ordering x i → Term 
+subst-var N (less x k)    = var x
+subst-var N (equal x)     = shift 0 x N
+subst-var N (greater i k) = var (i + k)
+
 infixl 10 _[_/_]
 _[_/_] : Term → Term → ℕ → Term
-(var x) [ N / i ] with compare x i 
-((var x) [ N / .(suc (x + k)) ])  | less .x k    = var x
-((var x) [ N / .x ])              | equal .x     = shift 0 x N
-((var .(suc (i + k))) [ N / i ])  | greater .i k = var (i + k)
+(var x) [ N / i ] = subst-var N (compare x i)
 (ƛ M)   [ N / i ] = ƛ (M [ N / suc i ])
 (L ∙ M) [ N / i ] = L [ N / i ] ∙ M [ N / i ]
 
