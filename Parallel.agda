@@ -19,7 +19,11 @@ data Term : Set where
 
 open import Relation.Nullary 
 
-
+-- 10 i 3 
+-- 1 + 9 i 2 
+-- 2 + 8 i 1 
+-- 3 + 7 i 0 
+-- 3 + 0 
 
 shift-var : (n i x : ℕ) → ℕ 
 shift-var zero    i x       = x + i  -- free 

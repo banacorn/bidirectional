@@ -4,6 +4,7 @@ open import Parallel
 
 open import Data.Nat
 open import Relation.Nullary 
+open import Relation.Nullary.Negation using (contraposition)
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive 
 open import Relation.Binary.PropositionalEquality hiding ([_])
 
@@ -22,6 +23,39 @@ x+i+j≡x+j+i x j {i} =
     open ≡-Reasoning
     open import Data.Nat.Properties
 
+module CMP where
+  open import Data.Nat.Properties      
+  open ≤-Reasoning
+
+  m+n≰x+m : ∀ {m n x} → n ≰ x → m + n > x + m
+  m+n≰x+m {m} {n} {x} n≰x = begin 
+      suc x + m 
+    ≡⟨ +-comm (suc x) m ⟩ 
+      m + suc x
+    ≤⟨ +-monoʳ-≤ m (≰⇒> n≰x) ⟩ 
+      m + n 
+    ∎
+
+  m+n≤x+m : ∀ {m n x} → n ≤ x → m + n ≤ x + m
+  m+n≤x+m {m} {n} {x} n≤x = begin 
+      m + n 
+    ≤⟨ +-monoʳ-≤ m n≤x ⟩ 
+      m + x 
+    ≡⟨ +-comm m x ⟩ 
+      x + m 
+    ∎
+
+  m+0≤x+m : ∀ m x → m + 0 ≤ x + m
+  m+0≤x+m m x = begin 
+      m + zero 
+    ≡⟨ +-identityʳ m ⟩ 
+      m 
+    ≤⟨ m≤m+n m x ⟩ 
+      m + x 
+    ≡⟨ +-comm m x ⟩ 
+      x + m 
+    ∎
+
 module ShiftVar where
   open import Data.Nat.Properties      
   open ≡-Reasoning
@@ -31,8 +65,8 @@ module ShiftVar where
   shift-var-n-0-i (suc n) zero = refl
   shift-var-n-0-i (suc n) (suc i) = cong suc (shift-var-n-0-i n i)
 
-  shift-var-lemma : ∀ n i x → shift-var n i x + 0 ≡ shift-var n i (x + 0)
-  shift-var-lemma n i x = 
+  shift-var-lemma' : ∀ n i x → shift-var n i x + 0 ≡ shift-var n i (x + 0)
+  shift-var-lemma' n i x = 
       shift-var n i x + zero
     ≡⟨ +-identityʳ (shift-var n i x) ⟩ 
       shift-var n i x
@@ -53,30 +87,76 @@ module ShiftVar where
 
   shift-shift-var : ∀ m n i x → shift-var m 0 (shift-var n i x) ≡ shift-var n i (shift-var m 0 x)
   shift-shift-var zero    zero    i x       = x+i+j≡x+j+i x 0
-  shift-shift-var zero    (suc n) i x       = shift-var-lemma (suc n) i x
+  shift-shift-var zero    (suc n) i x       = shift-var-lemma' (suc n) i x
   shift-shift-var (suc m) zero    i x       = shift-var-on-site (suc m) i x
   shift-shift-var (suc m) (suc n) i zero    = refl
   shift-shift-var (suc m) (suc n) i (suc x) = cong suc (shift-shift-var m n i x)
 
-  shift-shift-var-l-m : ∀ l m n i x → shift-var (suc l) m (shift-var (suc (l + n)) i x) ≡ shift-var (l + m + suc n) i (shift-var (suc l) m x)
-  shift-shift-var-l-m l m n i zero = {!   !}
-  shift-shift-var-l-m l m n i (suc x) = {!   !}
+  shift-var-lemma-≡ : ∀ n i x → n ≡ x → i + x ≡ shift-var n i x 
+  shift-var-lemma-≡ zero    i .0 refl = +-identityʳ i
+  shift-var-lemma-≡ (suc n) i .(suc n) refl = 
+      i + suc n
+    ≡⟨ +-suc i n ⟩ 
+      suc (i + n) 
+    ≡⟨ cong suc (shift-var-lemma-≡ n i n refl) ⟩ 
+      suc (shift-var n i n) 
+    ∎
+  
+  shift-var-lemma-≤ : ∀ {n x} i → n ≤ x → i + x ≡ shift-var n i x 
+  shift-var-lemma-≤ {zero}  {x}     i cmp       = +-comm i x
+  shift-var-lemma-≤ {suc n} {suc x} i (s≤s cmp) =
+      i + suc x
+    ≡⟨ +-suc i x ⟩ 
+      suc (i + x) 
+    ≡⟨ cong suc (shift-var-lemma-≤ i cmp) ⟩ 
+      suc (shift-var n i x) 
+    ∎
+
+  shift-var-lemma-> : ∀ {n i x} → n > x → x ≡ shift-var n i x 
+  shift-var-lemma-> {suc n} {i} {zero}  n>x       = refl
+  shift-var-lemma-> {suc n} {i} {suc x} (s≤s n>x) = cong suc (shift-var-lemma-> n>x)
+
+  open import Agda.Builtin.Bool
+
+  shift-shift-var-l-m'-0' : ∀ n i x m → shift-var n i x + m ≡ shift-var (m + n) i (x + m)
+  shift-shift-var-l-m'-0' n i x m with n ≤? x
+  ... | true because ofʸ p = 
+          shift-var n i x + m 
+        ≡⟨ cong (λ w → w + m) (sym (shift-var-lemma-≤ i p)) ⟩ 
+          i + x + m 
+        ≡⟨ +-assoc i x m ⟩ 
+          i + (x + m)
+        ≡⟨ shift-var-lemma-≤ {m + n} {x + m} i (CMP.m+n≤x+m p) ⟩ 
+          shift-var (m + n) i (x + m) 
+        ∎
+  ... | false because ofⁿ ¬p = 
+          shift-var n i x + m 
+        ≡⟨ cong (λ w → w + m) (sym (shift-var-lemma-> (≰⇒> ¬p))) ⟩ 
+          x + m 
+        ≡⟨ shift-var-lemma-> (CMP.m+n≰x+m ¬p) ⟩ 
+          shift-var (m + n) i (x + m) 
+        ∎
+
+  shift-shift-var-l-m' : ∀ l m n i x → shift-var l m (shift-var (l + n) i x) ≡ shift-var (l + m + n) i (shift-var l m x)
+  shift-shift-var-l-m' zero    m n i x       = shift-shift-var-l-m'-0' n i x m
+  shift-shift-var-l-m' (suc l) m n i zero    = refl
+  shift-shift-var-l-m' (suc l) m n i (suc x) = cong suc (shift-shift-var-l-m' l m n i x)
 
 shift-shift : ∀ m n i N → shift m 0 (shift n i N) β→* shift n i (shift m 0 N)
 shift-shift m n i (var x) = cong-var (ShiftVar.shift-shift-var m n i x)
 shift-shift m n i (ƛ N) = cong-ƛ (shift-shift (suc m) (suc n) i N)
 shift-shift m n i (M ∙ N) = cong-∙ (shift-shift m n i M) (shift-shift m n i N)
 
-shift-shift-l-m : ∀ l m n i N → shift (suc l) m (shift (suc l + n) i N) β→* shift (l + m + suc n) i (shift (suc l) m N)
-shift-shift-l-m l m n i (var x) = cong-var (ShiftVar.shift-shift-var-l-m l m n i x)
-shift-shift-l-m l m n i (ƛ N) = cong-ƛ (shift-shift-l-m (suc l) m n i N)
-shift-shift-l-m l m n i (M ∙ N) = cong-∙ (shift-shift-l-m l m n i M) (shift-shift-l-m l m n i N)
+shift-shift-l-m' : ∀ l m n i N → shift l m (shift (l + n) i N) β→* shift (l + m + n) i (shift l m N)
+shift-shift-l-m' l m n i (var x) = cong-var (ShiftVar.shift-shift-var-l-m' l m n i x)
+shift-shift-l-m' l m n i (ƛ N) = cong-ƛ (shift-shift-l-m' (suc l) m n i N)
+shift-shift-l-m' l m n i (M ∙ N) = cong-∙ (shift-shift-l-m' l m n i M) (shift-shift-l-m' l m n i N)
 
 cong-shift-app-2-3 : ∀ n i M N → shift (suc (suc (suc (suc n)))) i M [ ƛ shift (suc n) i N / 3 ] β→* shift (suc (suc (suc n))) i (M [ ƛ N / 3 ])
 cong-shift-app-2-3 n i (var zero) N = ε
 cong-shift-app-2-3 n i (var suc zero) N = ε
 cong-shift-app-2-3 n i (var suc (suc zero)) N = ε
-cong-shift-app-2-3 n i (var suc (suc (suc zero))) N = cong-ƛ (shift-shift-l-m zero 3 n i N)
+cong-shift-app-2-3 n i (var suc (suc (suc zero))) N = cong-ƛ (shift-shift-l-m' 1 3 n i N)
 cong-shift-app-2-3 n i (var suc (suc (suc (suc x)))) N = ε
 cong-shift-app-2-3 n i (ƛ M)   N = {!   !}
 cong-shift-app-2-3 n i (L ∙ M) N = cong-∙ (cong-shift-app-2-3 n i L N) (cong-shift-app-2-3 n i M N)
@@ -84,14 +164,14 @@ cong-shift-app-2-3 n i (L ∙ M) N = cong-∙ (cong-shift-app-2-3 n i L N) (cong
 cong-shift-app-2-2 : ∀ n i M N → shift (suc (suc (suc n))) i M [ ƛ shift (suc n) i N / 2 ] β→* shift (suc (suc n)) i (M [ ƛ N / 2 ])
 cong-shift-app-2-2 n i (var zero) N = ε
 cong-shift-app-2-2 n i (var suc zero) N = ε
-cong-shift-app-2-2 n i (var suc (suc zero)) N = cong-ƛ (shift-shift-l-m zero 2 n i N)
+cong-shift-app-2-2 n i (var suc (suc zero)) N = cong-ƛ (shift-shift-l-m' 1 2 n i N)
 cong-shift-app-2-2 n i (var suc (suc (suc x))) N = ε
 cong-shift-app-2-2 n i (ƛ M)   N = cong-ƛ (cong-shift-app-2-3 n i M N)
 cong-shift-app-2-2 n i (L ∙ M) N = cong-∙ (cong-shift-app-2-2 n i L N) (cong-shift-app-2-2 n i M N)
 
 cong-shift-app-2 : ∀ n i M N → shift (suc (suc n)) i M [ ƛ shift (suc n) i N / 1 ] β→* shift (suc n) i (M [ ƛ N / 1 ])
 cong-shift-app-2 n i (var zero)  N = ε
-cong-shift-app-2 n i (var suc zero) N = cong-ƛ (shift-shift-l-m zero 1 n i N)
+cong-shift-app-2 n i (var suc zero) N = cong-ƛ (shift-shift-l-m' 1 1 n i N)
 cong-shift-app-2 n i (var suc (suc x)) N = ε
 cong-shift-app-2 n i (ƛ M)   N = cong-ƛ (cong-shift-app-2-2 n i M N)
 cong-shift-app-2 n i (L ∙ M) N = cong-∙ (cong-shift-app-2 n i L N) (cong-shift-app-2 n i M N)
@@ -105,7 +185,7 @@ cong-shift-app-1 n i (ƛ M)   y = cong-ƛ {! !}
 cong-shift-app-1 n i (M ∙ N) y = cong-∙ (cong-shift-app-1 n i M y) (cong-shift-app-1 n i N y)
 
 cong-shift-app : (n i : ℕ) (M N : Term) → shift n i ((ƛ M) ∙ N) β→* shift n i (M [ N ])
-cong-shift-app n i (var zero) (var x) = β-ƛ-∙ ◅ cong-var (ShiftVar.shift-var-lemma n i x)
+cong-shift-app n i (var zero) (var x) = β-ƛ-∙ ◅ cong-var (ShiftVar.shift-var-lemma' n i x)
 cong-shift-app n i (var zero) (ƛ N)   = β-ƛ-∙ ◅ cong-ƛ (shift-shift 1 (suc n) i N)
 cong-shift-app n i (var zero) (M ∙ N) = β-ƛ-∙ ◅ cong-∙ (shift-shift 0 n i M) (shift-shift 0 n i N)
 cong-shift-app n i (var suc x) N      = β-ƛ-∙ ◅ ε
