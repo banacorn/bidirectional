@@ -1,6 +1,7 @@
 module Parallel where
 
 open import Data.Nat
+open import Data.Nat.Properties
 
 --------------------------------------------------------------------------------
 -- de Bruijn indexed lambda calculus
@@ -35,14 +36,25 @@ shift n i (var x) = var (shift-var n i x)
 shift n i (ƛ M)   = ƛ shift (suc n) i M
 shift n i (M ∙ N) = shift n i M ∙ shift n i N
 
-subst-var : ∀ {x i} → Term → Ordering x i → Term 
-subst-var N (less x k)    = var x
-subst-var N (equal x)     = shift 0 x N
-subst-var N (greater i k) = var (i + k)
+data Match : ℕ → ℕ → Set where
+  Under : ∀ {i x}  → x ≤ i → Match x       i
+  Exact : ∀ {i}    → Match i       i
+  Above : ∀ {i} x' → Match (suc x') i
+
+match : (x i : ℕ) → Match x i
+match x i with compare x i 
+... | less .x k     = Under (≤-step (m≤m+n x k))
+... | equal .i      = Exact
+... | greater .i k  = Above (i + k)
+
+subst-var : ∀ {x i} → Match x i → Term → Term 
+subst-var {x}     (Under _) N = var x
+subst-var {_} {i} Exact     N = shift 0 i N
+subst-var         (Above x) N = var x
 
 infixl 10 _[_/_]
 _[_/_] : Term → Term → ℕ → Term
-(var x) [ N / i ] = subst-var N (compare x i)
+(var x) [ N / i ] = subst-var (match x i) N
 (ƛ M)   [ N / i ] = ƛ (M [ N / suc i ])
 (L ∙ M) [ N / i ] = L [ N / i ] ∙ M [ N / i ]
 
@@ -116,108 +128,3 @@ cong-∙-r = gmap _ β-∙-r
 cong-∙ : {M M' N N' : Term} → M β→* M' → N β→* N' → M ∙ N β→* M' ∙ N'
 cong-∙ M→M' N→N' = (cong-∙-l M→M') ◅◅ (cong-∙-r N→N')
 
-
-module Example where 
-
-  open import Relation.Binary.Construct.Closure.ReflexiveTransitive.Properties using (preorder)
-  open import Relation.Binary.Reasoning.Preorder (preorder _β→*_) 
-
-  infixr 2 _→*⟨_⟩_
-  _→*⟨_⟩_ : ∀ (x : Term) {y z} → x β→* y → y IsRelatedTo z → x IsRelatedTo z
-  x →*⟨ P ⟩ y = x ∼⟨ return P ⟩ y
-
-  infixr 2 _→⟨_⟩_
-  _→⟨_⟩_ : ∀ (x : Term) {y z} → x β→ y → y IsRelatedTo z → x IsRelatedTo z
-  x →⟨ P ⟩ y = x ∼⟨ return (return P) ⟩ y
-
-  infixr 2 _→⟨⟩_
-  _→⟨⟩_ : ∀ (x : Term) {y} → x IsRelatedTo y → x IsRelatedTo y
-  x →⟨⟩ y = x ∼⟨ return ε ⟩ y
-
-  test-1 : ((ƛ var 0) ∙ var 0) IsRelatedTo ((var 0) [ var 0 ])
-  test-1 = (ƛ var 0) ∙ var 0 →⟨ β-ƛ-∙ ⟩ (var 0) [ var 0 ] ∎
-
-  test-0 : ƛ (ƛ var 0 ∙ var 1) ∙ (ƛ var 0 ∙ var 1) IsRelatedTo ƛ var 0 ∙ var 0
-  test-0 = 
-          ƛ (ƛ var 0 ∙ var 1) ∙ (ƛ var 0 ∙ var 1)
-      →⟨ β-ƛ β-ƛ-∙ ⟩ 
-          ƛ (var 0 ∙ var 1) [ ƛ var 0 ∙ var 1 ]
-      →⟨⟩ 
-          ƛ (var 0 ∙ var 1) [ ƛ var 0 ∙ var 1 / 0 ]
-      →⟨⟩ 
-          ƛ (var 0) [ ƛ var 0 ∙ var 1 / 0 ] ∙ (var 1) [ ƛ var 0 ∙ var 1 / 0 ]
-      →⟨⟩  
-          ƛ shift 0 0 (ƛ var 0 ∙ var 1) ∙ var 0
-      →⟨⟩  
-          ƛ (ƛ shift 0 0 (var 0 ∙ var 1)) ∙ var 0
-      →⟨⟩  
-          ƛ (ƛ shift 0 0 (var 0) ∙ shift 0 0 (var 1)) ∙ var 0
-      →⟨⟩  
-          ƛ ((ƛ var 0 ∙ var 1) ∙ var 0)
-      →⟨ β-ƛ β-ƛ-∙ ⟩  
-          ƛ (var 0 ∙ var 1) [ var 0 / 0 ]
-      →⟨⟩  
-          ƛ var 0 ∙ var 0
-      ∎ 
-      
-  Z : Term 
-  Z = ƛ ƛ var 0
-
-  SZ : Term 
-  SZ = ƛ ƛ var 1 ∙ var 0
-
-  PLUS : Term 
-  PLUS = ƛ ƛ ƛ ƛ var 3 ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var 0)
-
-  test-2 : PLUS ∙ Z ∙ SZ IsRelatedTo SZ
-  test-2 = 
-      PLUS ∙ Z ∙ SZ
-    →⟨ β-∙-l β-ƛ-∙ ⟩ 
-      (ƛ ƛ ƛ var 3 ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var 0)) [ ƛ ƛ var 0 / 0 ] ∙ SZ
-    →⟨⟩ 
-      (ƛ ((ƛ ƛ var 3 ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var 0)) [ ƛ ƛ var 0 / 1 ])) ∙ SZ
-    →⟨⟩ 
-      (ƛ (ƛ (ƛ var 3 ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var 0)) [ ƛ ƛ var 0 / 2 ])) ∙ SZ
-    →⟨⟩ 
-      (ƛ (ƛ (ƛ ((var 3 ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var 0)) [ ƛ ƛ var 0 / 3 ])))) ∙ SZ
-    →⟨⟩ 
-      (ƛ (ƛ (ƛ (var 3) [ ƛ ƛ var 0 / 3 ] ∙ (var 1) [ ƛ ƛ var 0 / 3 ] ∙ (var 2 ∙ var 1 ∙ var 0) [ ƛ ƛ var 0 / 3 ]))) ∙ SZ
-    →⟨⟩ 
-      (ƛ (ƛ (ƛ (shift 0 3 (ƛ (ƛ var 0))) ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var 0)))) ∙ SZ
-    →⟨⟩ 
-      (ƛ (ƛ (ƛ (ƛ (ƛ (var 0))) ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var 0)))) ∙ SZ
-    →⟨ β-∙-l (β-ƛ (β-ƛ (β-ƛ (β-∙-l β-ƛ-∙)))) ⟩ 
-      (ƛ (ƛ (ƛ (ƛ var 0) [ var 1 / 0 ] ∙ (var 2 ∙ var 1 ∙ var 0)))) ∙ SZ
-    →⟨⟩ 
-      (ƛ (ƛ (ƛ (ƛ (var 0) [ var 1 / 1 ]) ∙ (var 2 ∙ var 1 ∙ var 0)))) ∙ SZ
-    →⟨⟩ 
-      (ƛ (ƛ (ƛ (ƛ var 0) ∙ (var 2 ∙ var 1 ∙ var 0)))) ∙ SZ
-    →⟨ β-∙-l (β-ƛ (β-ƛ (β-ƛ β-ƛ-∙))) ⟩ 
-      (ƛ (ƛ (ƛ (var 0) [ var 2 ∙ var 1 ∙ var 0 / 0 ]))) ∙ SZ
-    →⟨⟩ 
-      (ƛ (ƛ (ƛ (var 2 ∙ var 1 ∙ var 0)))) ∙ SZ
-    →⟨ β-ƛ-∙ ⟩ 
-      (ƛ (ƛ (var 2 ∙ var 1 ∙ var 0))) [ SZ / 0 ]
-    →⟨⟩ 
-      ƛ (ƛ (var 2 ∙ var 1 ∙ var 0) [ SZ / 2 ])
-    →⟨⟩ 
-      ƛ (ƛ shift 0 2 SZ ∙ var 1 ∙ var 0)
-    →⟨⟩ 
-      ƛ (ƛ (ƛ ƛ var 1 ∙ var 0) ∙ var 1 ∙ var 0)
-    →⟨ β-ƛ (β-ƛ (β-∙-l β-ƛ-∙)) ⟩ 
-      ƛ (ƛ (ƛ var 1 ∙ var 0) [ var 1 / 0 ] ∙ var 0)
-    →⟨⟩ 
-      ƛ (ƛ (ƛ ((var 1 ∙ var 0) [ var 1 / 1 ])) ∙ var 0)
-    →⟨⟩ 
-      ƛ (ƛ (ƛ ((var 1) [ var 1 / 1 ] ∙ (var 0) [ var 1 / 1 ])) ∙ var 0)
-    →⟨⟩ 
-      ƛ (ƛ (ƛ (shift 0 1 (var 1) ∙ var 0)) ∙ var 0)
-    →⟨⟩ 
-      ƛ (ƛ (ƛ (var 2 ∙ var 0)) ∙ var 0)
-    →⟨ β-ƛ (β-ƛ β-ƛ-∙) ⟩ 
-      ƛ (ƛ (var 2 ∙ var 0) [ var 0 / 0 ])
-    →⟨⟩ 
-      ƛ (ƛ (var 2) [ var 0 / 0 ] ∙ var 0)
-    →⟨⟩ 
-      ƛ (ƛ var 1 ∙ var 0)
-    ∎
