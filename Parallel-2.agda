@@ -27,6 +27,10 @@ module CMP where
   open import Data.Nat.Properties      
   open ≤-Reasoning
 
+  2+x+k+n>x : ∀ {x k n} → suc (suc (x + k + n)) > x
+  2+x+k+n>x {zero}  {k} {n} = s≤s z≤n
+  2+x+k+n>x {suc x} {k} {n} = s≤s 2+x+k+n>x
+
   m+n≰x+m : ∀ {m n x} → n ≰ x → m + n > x + m
   m+n≰x+m {m} {n} {x} n≰x = begin 
       suc x + m 
@@ -152,36 +156,26 @@ shift-shift-l-m' l m n i (var x) = cong-var (ShiftVar.shift-shift-var-l-m' l m n
 shift-shift-l-m' l m n i (ƛ N) = cong-ƛ (shift-shift-l-m' (suc l) m n i N)
 shift-shift-l-m' l m n i (M ∙ N) = cong-∙ (shift-shift-l-m' l m n i M) (shift-shift-l-m' l m n i N)
 
-cong-shift-app-2-3 : ∀ n i M N → shift (suc (suc (suc (suc n)))) i M [ ƛ shift (suc n) i N / 3 ] β→* shift (suc (suc (suc n))) i (M [ ƛ N / 3 ])
-cong-shift-app-2-3 n i (var zero) N = ε
-cong-shift-app-2-3 n i (var suc zero) N = ε
-cong-shift-app-2-3 n i (var suc (suc zero)) N = ε
-cong-shift-app-2-3 n i (var suc (suc (suc zero))) N = cong-ƛ (shift-shift-l-m' 1 3 n i N)
-cong-shift-app-2-3 n i (var suc (suc (suc (suc x)))) N = ε
-cong-shift-app-2-3 n i (ƛ M)   N = {!   !}
-cong-shift-app-2-3 n i (L ∙ M) N = cong-∙ (cong-shift-app-2-3 n i L N) (cong-shift-app-2-3 n i M N)
+-- shift-shift-l-m' : ∀ l m n i N → shift l m (shift (l + n) i N) β→* shift (l + m + n) i (shift l m N)
 
-cong-shift-app-2-2 : ∀ n i M N → shift (suc (suc (suc n))) i M [ ƛ shift (suc n) i N / 2 ] β→* shift (suc (suc n)) i (M [ ƛ N / 2 ])
-cong-shift-app-2-2 n i (var zero) N = ε
-cong-shift-app-2-2 n i (var suc zero) N = ε
-cong-shift-app-2-2 n i (var suc (suc zero)) N = cong-ƛ (shift-shift-l-m' 1 2 n i N)
-cong-shift-app-2-2 n i (var suc (suc (suc x))) N = ε
-cong-shift-app-2-2 n i (ƛ M)   N = cong-ƛ (cong-shift-app-2-3 n i M N)
-cong-shift-app-2-2 n i (L ∙ M) N = cong-∙ (cong-shift-app-2-2 n i L N) (cong-shift-app-2-2 n i M N)
+-- shift (suc (suc (m + n))) i (var x) [ ƛ shift (suc n) i N / suc m ] β→* shift (suc m + n) i ((var x) [ ƛ N / suc m ])
+cong-shift-app-2-m-0 : ∀ m n i x N → shift (suc (suc (m + n))) i (var x) [ ƛ shift (suc n) i N / suc m ] β→* shift (suc m + n) i ((var x) [ ƛ N / suc m ])
+cong-shift-app-2-m-0 m n i x N with compare x (suc m)
+cong-shift-app-2-m-0 m n i x N | less .x k rewrite sym (ShiftVar.shift-var-lemma-> {suc (suc (x + k + n))} {i} {x} CMP.2+x+k+n>x) = {!   !}
+cong-shift-app-2-m-0 m n i x N | equal .(suc m) = {!   !}
+cong-shift-app-2-m-0 m n i x N | greater .(suc m) k = {!   !}
 
-cong-shift-app-2 : ∀ n i M N → shift (suc (suc n)) i M [ ƛ shift (suc n) i N / 1 ] β→* shift (suc n) i (M [ ƛ N / 1 ])
-cong-shift-app-2 n i (var zero)  N = ε
-cong-shift-app-2 n i (var suc zero) N = cong-ƛ (shift-shift-l-m' 1 1 n i N)
-cong-shift-app-2 n i (var suc (suc x)) N = ε
-cong-shift-app-2 n i (ƛ M)   N = cong-ƛ (cong-shift-app-2-2 n i M N)
-cong-shift-app-2 n i (L ∙ M) N = cong-∙ (cong-shift-app-2 n i L N) (cong-shift-app-2 n i M N)
-
+--  compare (shift-var (suc (suc (x + k + n))) i x) (suc (x + k)))
+cong-shift-app-2-m : ∀ m n i M N → shift (suc (suc (m + n))) i M [ ƛ shift (suc n) i N / suc m ] β→* shift (suc m + n) i (M [ ƛ N / suc m ])
+cong-shift-app-2-m m n i (var x) N = cong-shift-app-2-m-0 m n i x N
+cong-shift-app-2-m m n i (ƛ M)   N = cong-ƛ (cong-shift-app-2-m (suc m) n i M N)
+cong-shift-app-2-m m n i (L ∙ M) N = cong-∙ (cong-shift-app-2-m m n i L N) (cong-shift-app-2-m m n i M N) 
 
 cong-shift-app-1 : ∀ n i M y → shift (suc (suc n)) i M [ var shift-var n i y / 1 ] β→* shift (suc n) i (M [ var y / 1 ])
 cong-shift-app-1 n i (var zero)  y = ε
 cong-shift-app-1 n i (var suc zero) y = cong-var (ShiftVar.shift-var-lemma-1 n i y)
 cong-shift-app-1 n i (var suc (suc x)) y = ε
-cong-shift-app-1 n i (ƛ M)   y = cong-ƛ {! !}
+cong-shift-app-1 n i (ƛ M)   y = cong-ƛ {!  !}
 cong-shift-app-1 n i (M ∙ N) y = cong-∙ (cong-shift-app-1 n i M y) (cong-shift-app-1 n i N y)
 
 cong-shift-app : (n i : ℕ) (M N : Term) → shift n i ((ƛ M) ∙ N) β→* shift n i (M [ N ])
@@ -190,7 +184,7 @@ cong-shift-app n i (var zero) (ƛ N)   = β-ƛ-∙ ◅ cong-ƛ (shift-shift 1 (s
 cong-shift-app n i (var zero) (M ∙ N) = β-ƛ-∙ ◅ cong-∙ (shift-shift 0 n i M) (shift-shift 0 n i N)
 cong-shift-app n i (var suc x) N      = β-ƛ-∙ ◅ ε
 cong-shift-app n i (ƛ M)   (var y) = β-ƛ-∙ ◅ cong-ƛ (cong-shift-app-1 n i M y)
-cong-shift-app n i (ƛ M)   (ƛ N)   = β-ƛ-∙ ◅ cong-ƛ (cong-shift-app-2 n i M N)
+cong-shift-app n i (ƛ M)   (ƛ N)   = β-ƛ-∙ ◅ cong-ƛ (cong-shift-app-2-m 0 n i M N)
 cong-shift-app n i (ƛ M)   (L ∙ N) = {!   !}
 cong-shift-app n i (K ∙ M) (var y) = {!   !}
 cong-shift-app n i (K ∙ M) (ƛ N)   = {!   !}
