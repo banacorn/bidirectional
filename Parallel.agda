@@ -38,13 +38,13 @@ shift n i (ƛ M)   = ƛ shift (suc n) i M
 shift n i (M ∙ N) = shift n i M ∙ shift n i N
 
 data Match : ℕ → ℕ → Set where
-  Under : ∀ {i x}  → x ≤ i → Match x i
+  Under : ∀ {i x}  → x < i → Match x i
   Exact : ∀ {i x}  → x ≡ i → Match x i
   Above : ∀ {i} x' → Match (suc x') i
 
 match : (x i : ℕ) → Match x i
 match x i with compare x i 
-... | less .x k     = Under (≤-step (m≤m+n x k))
+... | less .x k     = Under (s≤s (m≤m+n x k))
 ... | equal .i      = Exact refl 
 ... | greater .i k  = Above (i + k)
 

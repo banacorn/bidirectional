@@ -5,7 +5,7 @@ open import Parallel
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive 
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive.Properties using (preorder)
 open import Relation.Binary.Reasoning.Preorder (preorder _β→_)
-open import Relation.Binary.Reasoning.Preorder (preorder _β→_) using (begin_; _∎; _≡⟨_⟩_) public
+open import Relation.Binary.Reasoning.Preorder (preorder _β→_) using (begin_; _∎; _≡⟨_⟩_; _≡⟨⟩_) public
 
 
 infixr 2 _→*⟨_⟩_
