@@ -2,7 +2,6 @@ module Abs where
 
 open import Parallel
 import ShiftVar
-import CMP
 open import Reasoning
 
 open import Data.Nat
@@ -11,21 +10,6 @@ open import Relation.Binary.Construct.Closure.ReflexiveTransitive
 open import Relation.Binary.PropositionalEquality
 open import Data.Nat.Properties
 open import Agda.Builtin.Bool
-
---                shift (l + n) i
---        ∙ --------------------------> ∙
---        |                             |
---        |                             |
---   shift l m                      shift l m
---        |                             |
---        ∨                             ∨           
---        ∙ --------------------------> ∙
---              shift (l + m + n) i
-
-shift-shift : ∀ l m n i N → shift l m (shift (l + n) i N) β→* shift (l + m + n) i (shift l m N)
-shift-shift l m n i (var x) = cong-var (ShiftVar.shift-shift-var-l-m' l m n i x)
-shift-shift l m n i (ƛ N) = cong-ƛ (shift-shift (suc l) m n i N)
-shift-shift l m n i (M ∙ N) = cong-∙ (shift-shift l m n i M) (shift-shift l m n i N)
 
 prop-1 : ∀ m n i x → x < suc m → shift-var (suc (suc (m + n))) i x ≡ x
 prop-1 m n i x x<1+m = sym (ShiftVar.shift-var-lemma-> {suc (suc (m + n))} {i} {x} (≤-trans x<1+m (s≤s (≤-step (m≤m+n m n)))))
@@ -88,7 +72,7 @@ var-lemma m n i x N with match x (suc m) | inspect (match x) (suc m)
         shift 0 (suc m) (shift n i N)
       ≡⟨⟩
         shift 0 (suc m) (shift n i N)
-      →*⟨ shift-shift 0 (suc m) n i N ⟩ 
+      →*⟨ ShiftVar.shift-shift 0 (suc m) n i N ⟩ 
         shift (suc (m + n)) i (shift 0 (suc m) N)
       ∎ 
 ... | Above _ v   | [ eq ] with m + n ≥? v

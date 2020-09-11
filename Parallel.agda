@@ -26,6 +26,8 @@ open import Relation.Binary.PropositionalEquality hiding (preorder; [_])
 -- 2 + 8 i 1 
 -- 3 + 7 i 0 
 -- 3 + 0 
+--------------------------------------------------------------------------------
+-- shift-var 
 
 shift-var : (n i x : ℕ) → ℕ 
 shift-var zero    i x       = x + i  -- free 

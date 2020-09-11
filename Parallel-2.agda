@@ -2,7 +2,6 @@ module Parallel-2 where
 
 open import Parallel
 import ShiftVar
-import CMP
 import Abs
 
 
@@ -13,22 +12,10 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 open import Data.Nat.Properties
 open import Agda.Builtin.Bool
 
-shift-shift : ∀ m n i N → shift m 0 (shift n i N) β→* shift n i (shift m 0 N)
-shift-shift m n i (var x) = cong-var (ShiftVar.shift-shift-var m n i x)
-shift-shift m n i (ƛ N) = cong-ƛ (shift-shift (suc m) (suc n) i N)
-shift-shift m n i (M ∙ N) = cong-∙ (shift-shift m n i M) (shift-shift m n i N)
-
-shift-shift-l-m' : ∀ l m n i N → shift l m (shift (l + n) i N) β→* shift (l + m + n) i (shift l m N)
-shift-shift-l-m' l m n i (var x) = cong-var (ShiftVar.shift-shift-var-l-m' l m n i x)
-shift-shift-l-m' l m n i (ƛ N) = cong-ƛ (shift-shift-l-m' (suc l) m n i N)
-shift-shift-l-m' l m n i (M ∙ N) = cong-∙ (shift-shift-l-m' l m n i M) (shift-shift-l-m' l m n i N)
-
 ------------------------------------------------------------------------------
 cong-shift-app : (n i : ℕ) (M N : Term) → shift n i ((ƛ M) ∙ N) β→* shift n i (M [ N ])
-cong-shift-app n i (var zero) (var x) = β-ƛ-∙ ◅ cong-var (ShiftVar.shift-var-lemma' n i x)
-cong-shift-app n i (var zero) (ƛ N)   = β-ƛ-∙ ◅ cong-ƛ (shift-shift 1 (suc n) i N)
-cong-shift-app n i (var zero) (M ∙ N) = β-ƛ-∙ ◅ cong-∙ (shift-shift 0 n i M) (shift-shift 0 n i N)
-cong-shift-app n i (var suc x) N      = β-ƛ-∙ ◅ ε
+cong-shift-app n i (var zero) N = β-ƛ-∙ ◅ ShiftVar.shift-shift 0 0 n i N
+cong-shift-app n i (var suc x) N = β-ƛ-∙ ◅ ε
 cong-shift-app n i (ƛ M)   N = β-ƛ-∙ ◅ cong-ƛ (Abs.lemma 0 n i M N)
 cong-shift-app n i (K ∙ M) (var y) = β-ƛ-∙ ◅ cong-∙ {!   !} {!   !}
 cong-shift-app n i (K ∙ M) (ƛ N)   = β-ƛ-∙ ◅ cong-∙ {!   !} {!   !}
