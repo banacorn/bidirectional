@@ -44,11 +44,13 @@ data Match : ℕ → ℕ → Set where
   Exact : ∀ {i x} → x ≡ i → Match x i
   Above : ∀ i v → Match (suc v) i
 
+open import Relation.Binary.Definitions
+
 match : (x i : ℕ) → Match x i
-match x i with compare x i 
-... | less .x k     = Under (s≤s (m≤m+n x k))
-... | equal .i      = Exact refl 
-... | greater .i k  = Above i (i + k) 
+match x       i with <-cmp x i 
+match x       i | tri< a ¬b ¬c = Under a
+match x       i | tri≈ ¬a b ¬c = Exact b
+match (suc x) i | tri> ¬a ¬b c = Above i x
 
 subst-var : ∀ {x i} → Match x i → Term → Term 
 subst-var {x}     (Under _)   N = var x

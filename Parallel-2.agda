@@ -3,36 +3,36 @@ module Parallel-2 where
 open import Parallel
 import ShiftVar
 import Abs
+import App
 
 
 open import Data.Nat
 open import Relation.Nullary 
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive 
 open import Relation.Binary.PropositionalEquality hiding ([_])
+open import Relation.Binary.Definitions
 open import Data.Nat.Properties
 open import Agda.Builtin.Bool
 
 ------------------------------------------------------------------------------
-cong-shift-app : (n i : ℕ) (M N : Term) → shift n i ((ƛ M) ∙ N) β→* shift n i (M [ N ])
-cong-shift-app n i (var zero) N = β-ƛ-∙ ◅ ShiftVar.shift-shift 0 0 n i N
-cong-shift-app n i (var suc x) N = β-ƛ-∙ ◅ ε
-cong-shift-app n i (ƛ M)   N = β-ƛ-∙ ◅ cong-ƛ (Abs.lemma 0 n i M N)
-cong-shift-app n i (K ∙ M) (var y) = β-ƛ-∙ ◅ cong-∙ {!   !} {!   !}
-cong-shift-app n i (K ∙ M) (ƛ N)   = β-ƛ-∙ ◅ cong-∙ {!   !} {!   !}
-cong-shift-app n i (K ∙ M) (L ∙ N) = β-ƛ-∙ ◅ cong-∙ {!   !} {!   !}
+
+cong-shift-app : ∀ {n i} (M N : Term) → shift (suc n) i M [ shift n i N ] β→* shift n i (M [ N ])
+cong-shift-app {n} {i} (var zero)  N = ShiftVar.shift-shift 0 0 n i N
+cong-shift-app {n} {i} (var suc x) N = ε
+cong-shift-app {n} {i} (ƛ M)       N = cong-ƛ (Abs.lemma 0 n i M N)
+cong-shift-app {n} {i} (K ∙ M)     N = cong-∙ (App.lemma 0 n i K N) (App.lemma 0 n i M N)
 
 cong-shift : {n i : ℕ} {M N : Term} → M β→ N → shift n i M β→* shift n i N
 cong-shift (β-ƛ M→N)        = cong-ƛ (cong-shift M→N)
-cong-shift (β-ƛ-∙ {M} {N})  = cong-shift-app _ _ M N
+cong-shift (β-ƛ-∙ {M} {N})  = β-ƛ-∙ ◅ cong-shift-app M N
 cong-shift (β-∙-l M→N)      = cong-∙-l (cong-shift M→N)
 cong-shift (β-∙-r M→N)      = cong-∙-r (cong-shift M→N)
 
-
 cong-[]-r : ∀ L {M N i} → M β→ N → L [ M / i ] β→* L [ N / i ]
-cong-[]-r (var x) {M} {N} {i} M→N with compare x i 
-cong-[]-r (var x) {M} {N} {.(suc (x + k))}  M→N | less .x k = ε
-cong-[]-r (var x) {M} {N} {.x}              M→N | equal .x = cong-shift M→N
-cong-[]-r (var .(suc (m + k))) {M} {N} {.m} M→N | greater m k = ε
+cong-[]-r (var x) {M} {N} {i} M→N with match x i 
+... | Under _ = ε
+... | Exact _ = cong-shift M→N
+... | Above _ _ = ε
 cong-[]-r (ƛ L)   M→N = cong-ƛ (cong-[]-r L M→N)
 cong-[]-r (K ∙ L) M→N = cong-∙-l (cong-[]-r K M→N) ◅◅ cong-∙-r (cong-[]-r L M→N)
 
