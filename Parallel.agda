@@ -18,7 +18,8 @@ data Term : Set where
 --------------------------------------------------------------------------------
 -- substitution
 
-open import Relation.Nullary 
+open import Relation.Nullary
+open import Relation.Binary.PropositionalEquality hiding (preorder; [_]) 
 
 -- 10 i 3 
 -- 1 + 9 i 2 
@@ -37,19 +38,19 @@ shift n i (ƛ M)   = ƛ shift (suc n) i M
 shift n i (M ∙ N) = shift n i M ∙ shift n i N
 
 data Match : ℕ → ℕ → Set where
-  Under : ∀ {i x}  → x ≤ i → Match x       i
-  Exact : ∀ {i}    → Match i       i
+  Under : ∀ {i x}  → x ≤ i → Match x i
+  Exact : ∀ {i x}  → x ≡ i → Match x i
   Above : ∀ {i} x' → Match (suc x') i
 
 match : (x i : ℕ) → Match x i
 match x i with compare x i 
 ... | less .x k     = Under (≤-step (m≤m+n x k))
-... | equal .i      = Exact
+... | equal .i      = Exact refl 
 ... | greater .i k  = Above (i + k)
 
 subst-var : ∀ {x i} → Match x i → Term → Term 
 subst-var {x}     (Under _) N = var x
-subst-var {_} {i} Exact     N = shift 0 i N
+subst-var {_} {i} (Exact _) N = shift 0 i N
 subst-var         (Above x) N = var x
 
 infixl 10 _[_/_]
