@@ -3,7 +3,8 @@ module Parallel-2 where
 open import Parallel
 import ShiftVar
 import CMP
-import AbsAbs
+import Abs
+
 
 open import Data.Nat
 open import Relation.Nullary 
@@ -22,22 +23,13 @@ shift-shift-l-m' l m n i (var x) = cong-var (ShiftVar.shift-shift-var-l-m' l m n
 shift-shift-l-m' l m n i (ƛ N) = cong-ƛ (shift-shift-l-m' (suc l) m n i N)
 shift-shift-l-m' l m n i (M ∙ N) = cong-∙ (shift-shift-l-m' l m n i M) (shift-shift-l-m' l m n i N)
 
-cong-shift-app-1 : ∀ n i M y → shift (suc (suc n)) i M [ var shift-var n i y / 1 ] β→* shift (suc n) i (M [ var y / 1 ])
-cong-shift-app-1 n i (var zero)  y = ε
-cong-shift-app-1 n i (var suc zero) y = cong-var (ShiftVar.shift-var-lemma-1 n i y)
-cong-shift-app-1 n i (var suc (suc x)) y = ε
-cong-shift-app-1 n i (ƛ M)   y = cong-ƛ {!  !}
-cong-shift-app-1 n i (M ∙ N) y = cong-∙ (cong-shift-app-1 n i M y) (cong-shift-app-1 n i N y)
-
 ------------------------------------------------------------------------------
 cong-shift-app : (n i : ℕ) (M N : Term) → shift n i ((ƛ M) ∙ N) β→* shift n i (M [ N ])
 cong-shift-app n i (var zero) (var x) = β-ƛ-∙ ◅ cong-var (ShiftVar.shift-var-lemma' n i x)
 cong-shift-app n i (var zero) (ƛ N)   = β-ƛ-∙ ◅ cong-ƛ (shift-shift 1 (suc n) i N)
 cong-shift-app n i (var zero) (M ∙ N) = β-ƛ-∙ ◅ cong-∙ (shift-shift 0 n i M) (shift-shift 0 n i N)
 cong-shift-app n i (var suc x) N      = β-ƛ-∙ ◅ ε
-cong-shift-app n i (ƛ M)   (var y) = β-ƛ-∙ ◅ cong-ƛ (cong-shift-app-1 n i M y)
-cong-shift-app n i (ƛ M)   (ƛ N)   = β-ƛ-∙ ◅ cong-ƛ (AbsAbs.lemma 0 n i M N)
-cong-shift-app n i (ƛ M)   (L ∙ N) = β-ƛ-∙ ◅ cong-ƛ (AbsApp.lemma 0 n i M L N)
+cong-shift-app n i (ƛ M)   N = β-ƛ-∙ ◅ cong-ƛ (Abs.lemma 0 n i M N)
 cong-shift-app n i (K ∙ M) (var y) = β-ƛ-∙ ◅ cong-∙ {!   !} {!   !}
 cong-shift-app n i (K ∙ M) (ƛ N)   = β-ƛ-∙ ◅ cong-∙ {!   !} {!   !}
 cong-shift-app n i (K ∙ M) (L ∙ N) = β-ƛ-∙ ◅ cong-∙ {!   !} {!   !}

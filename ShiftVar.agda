@@ -40,12 +40,6 @@ shift-var-on-site zero i x = x+i+j≡x+j+i x zero
 shift-var-on-site (suc n) i zero = shift-var-n-0-i (suc n) i
 shift-var-on-site (suc n) i (suc x) = cong suc (shift-var-on-site n i x)
 
-shift-var-lemma-1 : ∀ n i x → shift-var n i x + 1 ≡ shift-var (1 + n) i (x + 1)
-shift-var-lemma-1 zero i zero = +-comm i 1
-shift-var-lemma-1 zero i (suc x) = cong suc (x+i+j≡x+j+i x 1)
-shift-var-lemma-1 (suc n) i zero = refl
-shift-var-lemma-1 (suc n) i (suc x) = cong suc (shift-var-lemma-1 n i x)
-
 shift-shift-var : ∀ m n i x → shift-var m 0 (shift-var n i x) ≡ shift-var n i (shift-var m 0 x)
 shift-shift-var zero    zero    i x       = x+i+j≡x+j+i x 0
 shift-shift-var zero    (suc n) i x       = shift-var-lemma' (suc n) i x
