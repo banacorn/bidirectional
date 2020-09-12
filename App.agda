@@ -119,9 +119,9 @@ var-lemma m n i x N with match x m | inspect (match x) m
       ∎ 
 
 
-lemma : ∀ m n i M N 
+lemma : ∀ {m n i} M N 
     → shift (suc ((m + n))) i M [ shift n i N / m ] 
   β→* shift (m + n) i (M [ N / m ])
-lemma m n i (var x) N = var-lemma m n i x N
-lemma m n i (ƛ M)   N = cong-ƛ (lemma (suc m) n i M N)
-lemma m n i (K ∙ M) N = cong-∙ (lemma m n i K N) (lemma m n i M N)
+lemma (var x) N = var-lemma _ _ _ x N
+lemma (ƛ M)   N = cong-ƛ (lemma M N)
+lemma (K ∙ M) N = cong-∙ (lemma K N) (lemma M N)

@@ -2,7 +2,6 @@ module Parallel-2 where
 
 open import Parallel
 import ShiftVar
-import Abs
 import App
 
 
@@ -16,15 +15,9 @@ open import Agda.Builtin.Bool
 
 ------------------------------------------------------------------------------
 
-cong-shift-app : ∀ {n i} (M N : Term) → shift (suc n) i M [ shift n i N ] β→* shift n i (M [ N ])
-cong-shift-app {n} {i} (var zero)  N = ShiftVar.shift-shift 0 0 n i N
-cong-shift-app {n} {i} (var suc x) N = ε
-cong-shift-app {n} {i} (ƛ M)       N = cong-ƛ (Abs.lemma 0 n i M N)
-cong-shift-app {n} {i} (K ∙ M)     N = cong-∙ (App.lemma 0 n i K N) (App.lemma 0 n i M N)
-
 cong-shift : {n i : ℕ} {M N : Term} → M β→ N → shift n i M β→* shift n i N
 cong-shift (β-ƛ M→N)        = cong-ƛ (cong-shift M→N)
-cong-shift (β-ƛ-∙ {M} {N})  = β-ƛ-∙ ◅ cong-shift-app M N
+cong-shift (β-ƛ-∙ {M} {N})  = β-ƛ-∙ ◅ App.lemma M N
 cong-shift (β-∙-l M→N)      = cong-∙-l (cong-shift M→N)
 cong-shift (β-∙-r M→N)      = cong-∙-r (cong-shift M→N)
 
