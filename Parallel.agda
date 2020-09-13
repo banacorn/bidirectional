@@ -40,9 +40,9 @@ shift n i (ƛ M)   = ƛ shift (suc n) i M
 shift n i (M ∙ N) = shift n i M ∙ shift n i N
 
 data Match : ℕ → ℕ → Set where
-  Under : ∀ {i x} → x < i → Match x i
-  Exact : ∀ {i x} → x ≡ i → Match x i
-  Above : ∀ i v → Match (suc v) i
+  Under : ∀ {i x} → x     < i → Match x       i
+  Exact : ∀ {i x} → x     ≡ i → Match x       i
+  Above : ∀ i v   → suc v > i → Match (suc v) i
 
 open import Relation.Binary.Definitions
 
@@ -50,12 +50,12 @@ match : (x i : ℕ) → Match x i
 match x       i with <-cmp x i 
 match x       i | tri< a ¬b ¬c = Under a
 match x       i | tri≈ ¬a b ¬c = Exact b
-match (suc x) i | tri> ¬a ¬b c = Above i x
+match (suc x) i | tri> ¬a ¬b c = Above i x c
 
 subst-var : ∀ {x i} → Match x i → Term → Term 
 subst-var {x}     (Under _)   N = var x
 subst-var {_} {i} (Exact _)   N = shift 0 i N
-subst-var         (Above _ x) N = var x
+subst-var         (Above _ x _) N = var x
 
 infixl 10 _[_/_]
 _[_/_] : Term → Term → ℕ → Term

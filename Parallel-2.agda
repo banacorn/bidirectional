@@ -2,8 +2,7 @@ module Parallel-2 where
 
 open import Parallel
 import ShiftVar
-import App
-
+import Shift
 
 open import Data.Nat
 open import Relation.Nullary 
@@ -17,7 +16,7 @@ open import Agda.Builtin.Bool
 
 cong-shift : {n i : ℕ} {M N : Term} → M β→ N → shift n i M β→* shift n i N
 cong-shift (β-ƛ M→N)        = cong-ƛ (cong-shift M→N)
-cong-shift (β-ƛ-∙ {M} {N})  = β-ƛ-∙ ◅ App.lemma M N
+cong-shift (β-ƛ-∙ {M} {N})  = β-ƛ-∙ ◅ Shift.lemma M N
 cong-shift (β-∙-l M→N)      = cong-∙-l (cong-shift M→N)
 cong-shift (β-∙-r M→N)      = cong-∙-r (cong-shift M→N)
 
@@ -27,12 +26,12 @@ cong-[]-r (var x) {M} {N} {i} M→N with match x i
 ... | Exact _ = cong-shift M→N
 ... | Above _ _ = ε
 cong-[]-r (ƛ L)   M→N = cong-ƛ (cong-[]-r L M→N)
-cong-[]-r (K ∙ L) M→N = cong-∙-l (cong-[]-r K M→N) ◅◅ cong-∙-r (cong-[]-r L M→N)
+cong-[]-r (K ∙ L) M→N = cong-∙ (cong-[]-r K M→N) (cong-[]-r L M→N)
 
 
 cong-[]-l : ∀ {M N L i} → M β→ N → M [ L / i ] β→* N [ L / i ]
 cong-[]-l {ƛ M}                 (β-ƛ M→N)   = cong-ƛ   (cong-[]-l M→N)
-cong-[]-l {.(ƛ K) ∙ M} {L = L}  (β-ƛ-∙ {K}) = {!   !}
+cong-[]-l {.(ƛ K) ∙ M} {L = L}  (β-ƛ-∙ {K}) = β-ƛ-∙ ◅ {!   !}
 cong-[]-l {K ∙ M}               (β-∙-l M→N) = cong-∙-l (cong-[]-l M→N)
 cong-[]-l {K ∙ M}               (β-∙-r M→N) = cong-∙-r (cong-[]-l M→N)
 
