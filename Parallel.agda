@@ -20,15 +20,17 @@ data Term : Set where
 
 open import Relation.Nullary
 open import Relation.Binary.PropositionalEquality hiding (preorder; [_]) 
+open import Agda.Builtin.Bool
 
 --------------------------------------------------------------------------------
 -- shift-var 
 --------------------------------------------------------------------------------
 
 shift-var : (n i x : ℕ) → ℕ 
-shift-var zero    i x       = x + i  -- free 
-shift-var (suc n) i zero    = zero   -- bound
-shift-var (suc n) i (suc x) = suc (shift-var n i x)
+shift-var n i x with n ≤? x 
+... | true  because ofʸ  p = i + x      -- free 
+... | false because ofⁿ ¬p =     x      -- bound 
+
 
 shift : (n i : ℕ) → Term → Term
 shift n i (var x) = var (shift-var n i x)
