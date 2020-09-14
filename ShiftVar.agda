@@ -32,23 +32,13 @@ module CMP where
 
 open ≡-Reasoning
 
-shift-var-lemma-≡ : ∀ n i x → n ≡ x → i + x ≡ shift-var n i x 
-shift-var-lemma-≡ zero    i .0 refl = +-identityʳ i
-shift-var-lemma-≡ (suc n) i .(suc n) refl = 
-    i + suc n
-  ≡⟨ +-suc i n ⟩ 
-    suc (i + n) 
-  ≡⟨ cong suc (shift-var-lemma-≡ n i n refl) ⟩ 
-    suc (shift-var n i n) 
-  ∎
-
-shift-var-lemma-≤ : ∀ {n x} i → n ≤ x → i + x ≡ shift-var n i x 
-shift-var-lemma-≤ {zero}  {x}     i cmp       = +-comm i x
-shift-var-lemma-≤ {suc n} {suc x} i (s≤s cmp) =
+shift-var-lemma-≤ : ∀ {n i x} → n ≤ x → i + x ≡ shift-var n i x 
+shift-var-lemma-≤ {zero}  {i} {x}     cmp       = +-comm i x
+shift-var-lemma-≤ {suc n} {i} {suc x} (s≤s cmp) =
     i + suc x
   ≡⟨ +-suc i x ⟩ 
     suc (i + x) 
-  ≡⟨ cong suc (shift-var-lemma-≤ i cmp) ⟩ 
+  ≡⟨ cong suc (shift-var-lemma-≤ cmp) ⟩ 
     suc (shift-var n i x) 
   ∎
 
@@ -60,11 +50,11 @@ shift-var-lemma : ∀ n i x m → shift-var n i x + m ≡ shift-var (m + n) i (x
 shift-var-lemma n i x m with n ≤? x
 ... | true because ofʸ p = 
         shift-var n i x + m 
-      ≡⟨ cong (λ w → w + m) (sym (shift-var-lemma-≤ i p)) ⟩ 
+      ≡⟨ cong (λ w → w + m) (sym (shift-var-lemma-≤ p)) ⟩ 
         i + x + m 
       ≡⟨ +-assoc i x m ⟩ 
         i + (x + m)
-      ≡⟨ shift-var-lemma-≤ {m + n} {x + m} i (CMP.m+n≤x+m p) ⟩ 
+      ≡⟨ shift-var-lemma-≤ {m + n} {i} {x + m} (CMP.m+n≤x+m p) ⟩ 
         shift-var (m + n) i (x + m) 
       ∎
 ... | false because ofⁿ ¬p = 

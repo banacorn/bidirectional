@@ -21,13 +21,9 @@ data Term : Set where
 open import Relation.Nullary
 open import Relation.Binary.PropositionalEquality hiding (preorder; [_]) 
 
--- 10 i 3 
--- 1 + 9 i 2 
--- 2 + 8 i 1 
--- 3 + 7 i 0 
--- 3 + 0 
 --------------------------------------------------------------------------------
 -- shift-var 
+--------------------------------------------------------------------------------
 
 shift-var : (n i x : ℕ) → ℕ 
 shift-var zero    i x       = x + i  -- free 
@@ -53,8 +49,8 @@ match x       i | tri≈ ¬a b ¬c = Exact b
 match (suc x) i | tri> ¬a ¬b c = Above i x c
 
 subst-var : ∀ {x i} → Match x i → Term → Term 
-subst-var {x}     (Under _)   N = var x
-subst-var {_} {i} (Exact _)   N = shift 0 i N
+subst-var {x}     (Under _)     N = var x
+subst-var {_} {i} (Exact _)     N = shift 0 i N
 subst-var         (Above _ x _) N = var x
 
 infixl 10 _[_/_]
