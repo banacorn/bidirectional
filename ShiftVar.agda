@@ -25,6 +25,18 @@ module EQ where
       m + (l + n)
     ∎
 
+  l+m+n≡m+x : ∀ l m n x → l + n ≡ x → l + m + n ≡ m + x
+  l+m+n≡m+x l m n x l+n≡x = 
+    begin
+      l + m + n
+    ≡⟨ +-assoc l m n ⟩ 
+      l + (m + n)
+    ≡⟨ twist l m n ⟩ 
+      m + (l + n)
+    ≡⟨ cong (m +_) l+n≡x ⟩ 
+      m + x
+    ∎
+
 
 module INEQ where 
   open ≤-Reasoning
@@ -45,6 +57,21 @@ module INEQ where
       m + x 
     ≡⟨ +-comm m x ⟩ 
       x + m 
+    ∎
+  l+n≤n+i+x : ∀ l n i x → l ≤ x → l + n ≤ n + i + x
+  l+n≤n+i+x l n i x l≤x = 
+    begin
+      l + n
+    ≤⟨ +-monoˡ-≤ n l≤x ⟩ 
+      x + n
+    ≤⟨ m≤n+m (x + n) i ⟩ 
+      i + (x + n)
+    ≡⟨ cong (i +_) (+-comm x n) ⟩ 
+      i + (n + x)
+    ≡⟨ sym (+-assoc i n x) ⟩ 
+      i + n + x
+    ≡⟨ cong (_+ x) (+-comm i n) ⟩ 
+      n + i + x
     ∎
 
   l+m+n≤m+x : ∀ l m n x → l + n ≤ x → l + m + n ≤ m + x
@@ -92,6 +119,7 @@ shift-var-lemma-≤ : ∀ {n i x} → n ≤ x → i + x ≡ shift-var n i x
 shift-var-lemma-≤ {n} {i} {x} n≤x with n ≤? x 
 ... | .true  because ofʸ  p = refl
 ... | .false because ofⁿ ¬p = contradiction n≤x ¬p
+
 
 shift-var-lemma-> : ∀ {n i x} → n > x → x ≡ shift-var n i x 
 shift-var-lemma-> {n} {i} {x} n>x with n ≤? x 
@@ -169,7 +197,8 @@ shift-var-shift-var l m n i x with l ≤? x | l + n ≤? x
 --        ∙ --------------------------> ∙
 --              shift (l + m + n) i
 
-shift-shift : ∀ l m n i N → shift l m (shift (l + n) i N) β→* shift (l + m + n) i (shift l m N)
-shift-shift l m n i (var x) = cong-var (shift-var-shift-var l m n i x)
-shift-shift l m n i (ƛ N)   = cong-ƛ (shift-shift (suc l) m n i N)
-shift-shift l m n i (M ∙ N) = cong-∙ (shift-shift l m n i M) (shift-shift l m n i N)
+shift-shift : ∀ l m n i N → shift l m (shift (l + n) i N) ≡ shift (l + m + n) i (shift l m N)
+shift-shift l m n i (var x) = cong var_ (shift-var-shift-var l m n i x)
+shift-shift l m n i (ƛ N)   = cong ƛ_ (shift-shift (suc l) m n i N)
+shift-shift l m n i (M ∙ N) = cong₂ _∙_ (shift-shift l m n i M) (shift-shift l m n i N)
+
