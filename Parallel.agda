@@ -26,11 +26,19 @@ open import Agda.Builtin.Bool
 -- shift-var 
 --------------------------------------------------------------------------------
 
-shift-var : (n i x : ℕ) → ℕ 
-shift-var n i x with n ≤? x 
-... | true  because ofʸ  p = i + x      -- free 
-... | false because ofⁿ ¬p =     x      -- bound 
+data Binding : ℕ → ℕ → Set where 
+  Free  : ∀ {n x} → (n≤x : n ≤ x) → Binding n x
+  Bound : ∀ {n x} → (n>x : n > x) → Binding n x
 
+inspectBinding : ∀ n x → Binding n x
+inspectBinding n x with n ≤? x 
+... | yes p = Free p
+... | no ¬p = Bound (≰⇒> ¬p)
+
+shift-var : (n i x : ℕ) → ℕ 
+shift-var n i x with inspectBinding n x
+... | Free  _ = i + x      -- free 
+... | Bound _ =     x      -- bound 
 
 shift : (n i : ℕ) → Term → Term
 shift n i (var x) = var (shift-var n i x)
@@ -40,7 +48,7 @@ shift n i (M ∙ N) = shift n i M ∙ shift n i N
 data Match : ℕ → ℕ → Set where
   Under : ∀ {i x} → x     < i → Match x       i
   Exact : ∀ {i x} → x     ≡ i → Match x       i
-  Above : ∀ i v   → suc v > i → Match (suc v) i
+  Above : ∀ {i} v → suc v > i → Match (suc v) i
 
 open import Relation.Binary.Definitions
 
@@ -48,12 +56,12 @@ match : (x i : ℕ) → Match x i
 match x       i with <-cmp x i 
 match x       i | tri< a ¬b ¬c = Under a
 match x       i | tri≈ ¬a b ¬c = Exact b
-match (suc x) i | tri> ¬a ¬b c = Above i x c
+match (suc x) i | tri> ¬a ¬b c = Above x c
 
 subst-var : ∀ {x i} → Match x i → Term → Term 
 subst-var {x}     (Under _)     N = var x
 subst-var {_} {i} (Exact _)     N = shift 0 i N
-subst-var         (Above _ x _) N = var x
+subst-var         (Above x _) N = var x
 
 infixl 10 _[_/_]
 _[_/_] : Term → Term → ℕ → Term
