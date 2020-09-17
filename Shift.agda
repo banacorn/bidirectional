@@ -192,3 +192,58 @@ shift-[] : ∀ n m i M N → shift n m (M [ N / n + i ]) ≡ shift n m M [ N / n
 shift-[] n m i (var x) N = sym (subst-[]-var m n i x N)
 shift-[] n m i (ƛ M) N = cong ƛ_ (shift-[] (suc n) m i M N)
 shift-[] n m i (M ∙ M') N = cong₂ _∙_ (shift-[] n m i M N) (shift-[] n m i M' N)
+
+--------------------------------------------------------------------------------
+-- 
+
+
+
+shift-subst-var : ∀ l m n i x N → n ≥ i → i ≥ m → shift (l + m) (suc n) (var x) [ N / l + i ] ≡ shift (l + m) n (var x)
+shift-subst-var l m n i x N n≥i i≥m with inspectBinding (l + m) x 
+... | Free l+m≤x = 
+  begin 
+      subst-var (match (suc (n + x)) (l + i)) N
+  ≡⟨ subst-var-match-> {n + x} {l + i} N (s≤s prop) ⟩ 
+      var (n + x)
+  ∎ 
+  where 
+    prop : l + i ≤ n + x
+    prop = ≤-trans (≤-reflexive (+-comm l i)) (+-mono-≤ n≥i (≤-trans (m≤m+n l m) l+m≤x))
+
+... | Bound l+m>x =
+    begin 
+        subst-var (match x (l + i)) N
+    ≡⟨ subst-var-match-< {x} {l + i} N prop ⟩ 
+        var x
+    ∎ 
+    where 
+      prop : x < l + i
+      prop = ≤-trans l+m>x (+-monoʳ-≤ l i≥m)
+
+-- postulate 
+shift-subst : ∀ l m n i M N → n ≥ i → i ≥ m → shift (l + m) (suc n) M [ N / l + i ] ≡ shift (l + m) n M
+shift-subst l m n i (var x) N n≥i i≥m = shift-subst-var l m n i x N n≥i i≥m
+shift-subst l m n i (ƛ M)   N n≥i i≥m = cong ƛ_ (shift-subst (suc l) m n i M N n≥i i≥m)
+shift-subst l m n i (L ∙ M) N n≥i i≥m = cong₂ _∙_ (shift-subst l m n i L N n≥i i≥m) (shift-subst l m n i M N n≥i i≥m)
+
+-- shift-[]2 l m i M (var x) 1+m+i≥l with inspectBinding l x
+-- ... | Free l≤x = {!  !}
+-- ... | Bound l>x with match x m 
+-- ... | Under x>m = refl
+-- ... | Exact x≡m = {!   !}
+-- ... | Above v v≥m = {!  !}
+-- shift-[]2 l m i M (ƛ N) m+i>l = cong ƛ_ {!   !}
+-- shift-[]2 l m i M (N ∙ N') m+i>l = {!   !}
+
+
+
+-- v≥m :        v ≥ m
+-- 1+m+i≥l :  suc m + i ≥ l
+-- l>x :        l ≥ suc (suc v) 
+
+
+--  m + i ≥ suc v ≥ suc m
+
+--  m + i ≥ suc m 
+
+--  i ≥ 1

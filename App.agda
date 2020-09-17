@@ -36,6 +36,7 @@ subst-≡ x i N x≡i with match x i
 ... | Exact x≡i' = refl
 ... | Above v x≥i = contradiction (sym x≡i) (<⇒≢ x≥i)
 
+
 subst-> : ∀ x i N → suc x > i → (var suc x) [ N / i ] ≡ var x
 subst-> x i N x≥i with match (suc x) i 
 ... | Under x<i = contradiction (≤-pred (≤-step x<i)) (<⇒≱ x≥i)
@@ -80,48 +81,17 @@ var-lemma {m} {i} x M N with match x m
         subst-var (match (suc v) (suc (m + i))) N [ M [ N / i ] / m ]
     ≡⟨ cong (_[ M [ N / i ] / m ]) (Shift.subst-var-match-≡ {suc v} {suc m + i} N (cong suc v≡m+i)) ⟩ 
         shift 0 (suc m + i) N [ M [ N / i ] / m ]
-    ≡⟨ {!  !} ⟩ 
+    ≡⟨ Shift.shift-subst 0 0 (m + i) m N (M [ N / i ]) (m≤m+n m i) z≤n ⟩ 
         shift 0 (m + i) N
     ∎ 
-
-
--- subst-var
---       (match (suc v) (suc (m + i))
---        | (<-cmp (suc v) (suc (m + i))
---           | Relation.Nullary.Decidable.Core.map′
---             (λ eq → cong suc (≡ᵇ⇒≡ v (m + i) eq))
---             (λ eq → ≡⇒≡ᵇ v (m + i) (suc-injective eq))
---             (Data.Bool.Properties.T? (v ≡ᵇ m + i))
---           | Data.Bool.Properties.T? (v <ᵇ m + i)))
---       N
---       [ M [ N / i ] / m ]
---       ≡ shift 0 (m + i) N
-... | Above v' v>m+i = {!   !}
-
--- subst-var
---       (match (suc v) (suc (m + i))
---        | (<-cmp (suc v) (suc (m + i))
---           | Relation.Nullary.Decidable.Core.map′
---             (λ eq → cong suc (≡ᵇ⇒≡ v (m + i) eq))
---             (λ eq → ≡⇒≡ᵇ v (m + i) (suc-injective eq))
---             (Data.Bool.Properties.T? (v ≡ᵇ m + i))
---           | Data.Bool.Properties.T? (v <ᵇ m + i)))
---       N
---       [ M [ N / i ] / m ]
---       β→* subst-var (match v (m + i)) N
--- var-lemma {m} {i} x M N  | Under x<1+m+i with match x m  
--- ... | Under x<m = 
---     begin
---         var x 
---     ≡⟨ {!  !} ⟩ 
---         {!   !}
---     ≡⟨ {!   !} ⟩ 
---         subst-var (match x (m + i)) N
---     ∎ 
--- ... | Exact x₂ = {!   !}
--- ... | Above .m v = {!   !}
--- var-lemma {m} {i} x M N  | Exact x₁ = {!   !}
--- var-lemma {m} {i} x M N  | Above .(suc (m + i)) v = {!   !}
+... | Above v' v>m+i =
+    begin 
+        subst-var (match (suc (suc v')) (suc (m + i))) N [ M [ N / i ] / m ]
+    ≡⟨ cong (_[ M [ N / i ] / m ]) (Shift.subst-var-match-> {suc v'} {suc m + i} N (s≤s v>m+i)) ⟩ 
+        (var (suc v')) [ M [ N / i ] / m ]
+    ≡⟨ subst-> v' m (M [ N / i ]) (≤-trans (s≤s (m≤m+n m i)) v>m+i) ⟩ 
+        var v'
+    ∎ 
 
 lemma : ∀ {m i} M N O 
     → M [ O / suc m + i ] [ N [ O / i ] / m     ] 

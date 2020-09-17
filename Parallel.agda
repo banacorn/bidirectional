@@ -124,6 +124,9 @@ to-parallel (β-∙-r M→N) = β-∙ β⇒identity (to-parallel M→N)
 
 open import Relation.Binary.PropositionalEquality hiding ([_]; preorder)
 
+≡⇒β→* : ∀ {M N} → M ≡ N → M β→* N
+≡⇒β→* refl = ε
+
 cong-var : ∀ {x y} → x ≡ y → var x β→* var y
 cong-var {x} {y} refl = ε
 
