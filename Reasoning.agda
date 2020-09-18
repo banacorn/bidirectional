@@ -1,6 +1,7 @@
 module Reasoning where 
 
-open import Parallel
+open import Base
+open import Reduction
 
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive 
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive.Properties using (preorder)

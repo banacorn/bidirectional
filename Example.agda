@@ -1,7 +1,9 @@
 
 module Example where 
 
-open import Parallel
+open import Base
+open import Subst
+open import Reduction
 open import Reasoning
 
 test-1 : ((ƛ var 0) ∙ var 0) β→* ((var 0) [ var 0 ])
@@ -23,11 +25,11 @@ test-0 =
     →⟨⟩ 
         ƛ (var 0) [ ƛ var 0 ∙ var 1 / 0 ] ∙ (var 1) [ ƛ var 0 ∙ var 1 / 0 ]
     →⟨⟩  
-        ƛ shift 0 0 (ƛ var 0 ∙ var 1) ∙ var 0
+        ƛ lift 0 0 (ƛ var 0 ∙ var 1) ∙ var 0
     →⟨⟩  
-        ƛ (ƛ shift 0 0 (var 0 ∙ var 1)) ∙ var 0
+        ƛ (ƛ lift 0 0 (var 0 ∙ var 1)) ∙ var 0
     →⟨⟩  
-        ƛ (ƛ shift 0 0 (var 0) ∙ shift 0 0 (var 1)) ∙ var 0
+        ƛ (ƛ lift 0 0 (var 0) ∙ lift 0 0 (var 1)) ∙ var 0
     →⟨⟩  
         ƛ ((ƛ var 0 ∙ var 1) ∙ var 0)
     →⟨ β-ƛ β-ƛ-∙ ⟩  
@@ -60,7 +62,7 @@ test-2 =
   →⟨⟩ 
     (ƛ (ƛ (ƛ (var 3) [ ƛ ƛ var 0 / 3 ] ∙ (var 1) [ ƛ ƛ var 0 / 3 ] ∙ (var 2 ∙ var 1 ∙ var 0) [ ƛ ƛ var 0 / 3 ]))) ∙ SZ
   →⟨⟩ 
-    (ƛ (ƛ (ƛ (shift 0 3 (ƛ (ƛ var 0))) ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var 0)))) ∙ SZ
+    (ƛ (ƛ (ƛ (lift 0 3 (ƛ (ƛ var 0))) ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var 0)))) ∙ SZ
   →⟨⟩ 
     (ƛ (ƛ (ƛ (ƛ (ƛ (var 0))) ∙ var 1 ∙ (var 2 ∙ var 1 ∙ var 0)))) ∙ SZ
   →⟨ β-∙-l (β-ƛ (β-ƛ (β-ƛ (β-∙-l β-ƛ-∙)))) ⟩ 
@@ -78,7 +80,7 @@ test-2 =
   →⟨⟩ 
     ƛ (ƛ (var 2 ∙ var 1 ∙ var 0) [ SZ / 2 ])
   →⟨⟩ 
-    ƛ (ƛ shift 0 2 SZ ∙ var 1 ∙ var 0)
+    ƛ (ƛ lift 0 2 SZ ∙ var 1 ∙ var 0)
   →⟨⟩ 
     ƛ (ƛ (ƛ ƛ var 1 ∙ var 0) ∙ var 1 ∙ var 0)
   →⟨ β-ƛ (β-ƛ (β-∙-l β-ƛ-∙)) ⟩ 
@@ -88,7 +90,7 @@ test-2 =
   →⟨⟩ 
     ƛ (ƛ (ƛ ((var 1) [ var 1 / 1 ] ∙ (var 0) [ var 1 / 1 ])) ∙ var 0)
   →⟨⟩ 
-    ƛ (ƛ (ƛ (shift 0 1 (var 1) ∙ var 0)) ∙ var 0)
+    ƛ (ƛ (ƛ (lift 0 1 (var 1) ∙ var 0)) ∙ var 0)
   →⟨⟩ 
     ƛ (ƛ (ƛ (var 2 ∙ var 0)) ∙ var 0)
   →⟨ β-ƛ (β-ƛ β-ƛ-∙) ⟩ 
