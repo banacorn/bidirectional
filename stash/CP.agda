@@ -45,7 +45,7 @@ _[_/_] : Type → Type → TypeVar → Type
 𝟙 [ T / X ] = {!   !}
 ⊥ [ T / X ] = {!   !}
 𝟘 [ T / X ] = {!   !}
-⊤ [ T / X ] = {!   !}
+⊤ [ T / X ] = {!  !}
 
 Channel : Set 
 Channel = ℕ
