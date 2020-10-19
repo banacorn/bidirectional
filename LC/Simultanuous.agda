@@ -1,8 +1,8 @@
-module Simultanuous where
+module LC.Simultanuous where
 
-open import Base 
-open import Subst
-open import Reduction
+open import LC.Base 
+open import LC.Subst
+open import LC.Reduction
 
 open import Data.Nat
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive 

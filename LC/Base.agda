@@ -1,4 +1,4 @@
-module Base where 
+module LC.Base where 
 
 open import Data.Nat
 

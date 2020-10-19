@@ -1,8 +1,8 @@
-module Reduction where 
+module LC.Reduction where 
 
 
-open import Base 
-open import Subst  
+open import LC.Base 
+open import LC.Subst  
 
 open import Data.Nat
 open import Data.Nat.Properties
@@ -48,7 +48,7 @@ cong-∙ : {M M' N N' : Term} → M β→* M' → N β→* N' → M ∙ N β→*
 cong-∙ M→M' N→N' = (cong-∙-l M→M') ◅◅ (cong-∙-r N→N')
 
 
-open import Subst.Term
+open import LC.Subst.Term
 
 cong-lift : {n i : ℕ} {M N : Term} → M β→ N → lift n i M β→* lift n i N
 cong-lift (β-ƛ M→N)        = cong-ƛ (cong-lift M→N)

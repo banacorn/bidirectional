@@ -1,4 +1,4 @@
-module Subst.Var where 
+module LC.Subst.Var where 
 
 open import Data.Nat
 open import Data.Nat.Properties

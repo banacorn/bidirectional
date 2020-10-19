@@ -1,7 +1,7 @@
-module Reasoning where 
+module LC.Reasoning where 
 
-open import Base
-open import Reduction
+open import LC.Base
+open import LC.Reduction
 
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive 
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive.Properties using (preorder)

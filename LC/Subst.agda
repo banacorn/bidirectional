@@ -1,9 +1,9 @@
-module Subst where 
+module LC.Subst where 
 
-open import Base 
-open import Subst.Var 
-open import Subst.Term  
-open import Subst.Term public using (lift)
+open import LC.Base 
+open import LC.Subst.Var 
+open import LC.Subst.Term  
+open import LC.Subst.Term public using (lift)
 
 open import Data.Nat
 open import Data.Nat.Properties
@@ -63,15 +63,15 @@ subst-[]-var m n i x N | Free n≤x with match x (n + i)
 subst-[]-var m n i x N | Free n≤x | Under x<n+i =
     begin 
         subst-var (match (m + x) (n + m + i)) N
-    ≡⟨ subst-var-match-< {m + x} {n + m + i} N (Subst.Var.INEQ.l+m+n>m+x n m i x x<n+i) ⟩ 
+    ≡⟨ subst-var-match-< {m + x} {n + m + i} N (LC.Subst.Var.INEQ.l+m+n>m+x n m i x x<n+i) ⟩ 
         var (m + x)
-    ≡⟨ cong var_ (sym (Subst.Var.lift-var-≤ n≤x)) ⟩ 
+    ≡⟨ cong var_ (sym (LC.Subst.Var.lift-var-≤ n≤x)) ⟩ 
         var lift-var n m x
     ∎ 
 subst-[]-var m n i x N | Free n≤x | Exact x≡n+i =
     begin 
         subst-var (match (m + x) (n + m + i)) N
-    ≡⟨ subst-var-match-≡ {m + x} {n + m + i} N (sym (Subst.Var.EQ.l+m+n≡m+x n m i x (sym x≡n+i))) ⟩ 
+    ≡⟨ subst-var-match-≡ {m + x} {n + m + i} N (sym (LC.Subst.Var.EQ.l+m+n≡m+x n m i x (sym x≡n+i))) ⟩ 
         lift 0 (n + m + i) N
     ≡⟨ lift-lemma 0 m n i N ⟩ 
         lift n m (lift 0 (n + i) N)
@@ -81,9 +81,9 @@ subst-[]-var m n i .(suc v) N | Free n≤x | Above v x≥n+i =
         subst-var (match (m + suc v) (n + m + i)) N
     ≡⟨ cong (λ w → subst-var (match w (n + m + i)) N) (+-suc m v) ⟩ 
         subst-var (match (suc m + v) (n + m + i)) N
-    ≡⟨ subst-var-match-> {m + v} {n + m + i} N (s≤s (Subst.Var.INEQ.l+m+n≤m+x n m i v (≤-pred x≥n+i))) ⟩ 
+    ≡⟨ subst-var-match-> {m + v} {n + m + i} N (s≤s (LC.Subst.Var.INEQ.l+m+n≤m+x n m i v (≤-pred x≥n+i))) ⟩ 
         var (m + v)
-    ≡⟨ cong var_ (sym (Subst.Var.lift-var-≤ {n} {m} {v} (≤-trans (m≤m+n n i) (≤-pred x≥n+i)))) ⟩ 
+    ≡⟨ cong var_ (sym (LC.Subst.Var.lift-var-≤ {n} {m} {v} (≤-trans (m≤m+n n i) (≤-pred x≥n+i)))) ⟩ 
         var lift-var n m v
     ∎ 
 subst-[]-var m n i x N | Bound n>x =
@@ -91,7 +91,7 @@ subst-[]-var m n i x N | Bound n>x =
         subst-var (match x (n + m + i)) N
     ≡⟨ subst-var-match-< N (≤-trans n>x (≤-trans (m≤m+n n m) (m≤m+n (n + m) i))) ⟩ 
         var x
-    ≡⟨ cong var_ (sym (Subst.Var.lift-var-> n>x)) ⟩ 
+    ≡⟨ cong var_ (sym (LC.Subst.Var.lift-var-> n>x)) ⟩ 
         var lift-var n m x
     ≡⟨⟩ 
         lift n m (var x)
@@ -102,7 +102,7 @@ subst-[]-var m n i x N | Bound n>x =
 lemma : ∀ {m n i} M N 
   → lift (suc ((m + n))) i M [ lift n i N / m ] 
   ≡ lift (m + n)         i (M [ N / m ])
-lemma {m} {n} {i} (var x) N = Subst.Term.subst-var-lift _ _ _ x N
+lemma {m} {n} {i} (var x) N = LC.Subst.Term.subst-var-lift _ _ _ x N
 lemma (ƛ M)   N = cong  ƛ_   (lemma M N)
 lemma (K ∙ M) N = cong₂ _∙_  (lemma K N) (lemma M N)
 
@@ -148,17 +148,17 @@ subst-var-match-[] {m} {i} x M N with match x m
 ... | Under x<m = 
     begin 
         subst-var (match x (suc (m + i))) N [ M [ N / i ] / m ]
-    ≡⟨ (cong (_[ M [ N / i ] / m ])) (Subst.Term.subst-var-match-< N (≤-trans x<m (≤-step (m≤m+n m i)))) ⟩ 
+    ≡⟨ (cong (_[ M [ N / i ] / m ])) (LC.Subst.Term.subst-var-match-< N (≤-trans x<m (≤-step (m≤m+n m i)))) ⟩ 
         (var x) [ M [ N / i ] / m ]
     ≡⟨ subst-< x m (M [ N / i ]) x<m ⟩ 
         var x
-    ≡⟨ sym (Subst.Term.subst-var-match-< N (≤-trans x<m (m≤m+n m i))) ⟩ 
+    ≡⟨ sym (LC.Subst.Term.subst-var-match-< N (≤-trans x<m (m≤m+n m i))) ⟩ 
         subst-var (match x (m + i)) N
     ∎ 
 ... | Exact x≡m =
     begin 
         subst-var (match x (suc (m + i))) N [ M [ N / i ] / m ]
-    ≡⟨ cong (_[ M [ N / i ] / m ]) (Subst.Term.subst-var-match-< N (≤-trans (s≤s (≤-reflexive x≡m)) (s≤s (m≤m+n m i)))) ⟩ 
+    ≡⟨ cong (_[ M [ N / i ] / m ]) (LC.Subst.Term.subst-var-match-< N (≤-trans (s≤s (≤-reflexive x≡m)) (s≤s (m≤m+n m i)))) ⟩ 
         (var x) [ M [ N / i ] / m ]
     ≡⟨ subst-≡ x m (M [ N / i ]) x≡m ⟩ 
         lift 0 m (M [ N / i ])
@@ -169,7 +169,7 @@ subst-var-match-[] {m} {i} x M N with match x m
 ... | Under v<m+i = 
     begin 
         subst-var (match (suc v) (suc (m + i))) N [ M [ N / i ] / m ]
-    ≡⟨ cong (_[ M [ N / i ] / m ]) (Subst.Term.subst-var-match-< {suc v} {suc m + i} N (s≤s v<m+i)) ⟩ 
+    ≡⟨ cong (_[ M [ N / i ] / m ]) (LC.Subst.Term.subst-var-match-< {suc v} {suc m + i} N (s≤s v<m+i)) ⟩ 
         (var suc v) [ M [ N / i ] / m ]
     ≡⟨ subst-> v m (M [ N / i ]) v≥m ⟩ 
         var v
@@ -177,7 +177,7 @@ subst-var-match-[] {m} {i} x M N with match x m
 ... | Exact v≡m+i = 
     begin 
         subst-var (match (suc v) (suc (m + i))) N [ M [ N / i ] / m ]
-    ≡⟨ cong (_[ M [ N / i ] / m ]) (Subst.Term.subst-var-match-≡ {suc v} {suc m + i} N (cong suc v≡m+i)) ⟩ 
+    ≡⟨ cong (_[ M [ N / i ] / m ]) (LC.Subst.Term.subst-var-match-≡ {suc v} {suc m + i} N (cong suc v≡m+i)) ⟩ 
         lift 0 (suc m + i) N [ M [ N / i ] / m ]
     ≡⟨ lift-subst 0 0 (m + i) m N (M [ N / i ]) (m≤m+n m i) z≤n ⟩ 
         lift 0 (m + i) N
@@ -185,7 +185,7 @@ subst-var-match-[] {m} {i} x M N with match x m
 ... | Above v' v>m+i =
     begin 
         subst-var (match (suc (suc v')) (suc (m + i))) N [ M [ N / i ] / m ]
-    ≡⟨ cong (_[ M [ N / i ] / m ]) (Subst.Term.subst-var-match-> {suc v'} {suc m + i} N (s≤s v>m+i)) ⟩ 
+    ≡⟨ cong (_[ M [ N / i ] / m ]) (LC.Subst.Term.subst-var-match-> {suc v'} {suc m + i} N (s≤s v>m+i)) ⟩ 
         (var (suc v')) [ M [ N / i ] / m ]
     ≡⟨ subst-> v' m (M [ N / i ]) (≤-trans (s≤s (m≤m+n m i)) v>m+i) ⟩ 
         var v'

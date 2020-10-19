@@ -1,10 +1,10 @@
 
-module Example where 
+module LC.Example where 
 
-open import Base
-open import Subst
-open import Reduction
-open import Reasoning
+open import LC.Base
+open import LC.Subst
+open import LC.Reduction
+open import LC.Reasoning
 
 test-1 : ((ƛ var 0) ∙ var 0) β→* ((var 0) [ var 0 ])
 test-1 = 

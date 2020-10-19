@@ -1,7 +1,7 @@
-module Subst.Term where 
+module LC.Subst.Term where 
 
-open import Base 
-open import Subst.Var 
+open import LC.Base 
+open import LC.Subst.Var 
 
 open import Data.Nat
 open import Data.Nat.Properties
@@ -32,7 +32,7 @@ open import Relation.Binary.PropositionalEquality hiding ([_])
 
 
 lift-lemma : ∀ l m n i N → lift l (n + m + i) N ≡ lift (l + n) m (lift l (n + i) N)
-lift-lemma l m n i (var x) = cong var_ (Subst.Var.lift-var-lemma l m n i x)
+lift-lemma l m n i (var x) = cong var_ (LC.Subst.Var.lift-var-lemma l m n i x)
 lift-lemma l m n i (ƛ M)   = cong ƛ_ (lift-lemma (suc l) m n i M)
 lift-lemma l m n i (M ∙ N) = cong₂ _∙_ (lift-lemma l m n i M) (lift-lemma l m n i N)
 
@@ -119,11 +119,11 @@ subst-var-lift m n i x N with match x m
 ... | Under x<m = 
     begin 
         subst-var (match (lift-var (suc (m + n)) i x) m) (lift n i N)
-    ≡⟨ cong (λ w → subst-var (match w m) (lift n i N)) (Subst.Var.lift-var-> prop1) ⟩ 
+    ≡⟨ cong (λ w → subst-var (match w m) (lift n i N)) (LC.Subst.Var.lift-var-> prop1) ⟩ 
         subst-var (match x m) (lift n i N)
     ≡⟨ subst-var-match-< (lift n i N) x<m ⟩ 
         var x
-    ≡⟨ cong var_ (sym (Subst.Var.lift-var-> prop2)) ⟩ 
+    ≡⟨ cong var_ (sym (LC.Subst.Var.lift-var-> prop2)) ⟩ 
         lift (m + n) i (var x)
     ∎ 
     where
@@ -136,7 +136,7 @@ subst-var-lift m n i x N with match x m
 ... | Exact refl =
       begin
         subst-var (match (lift-var (suc (m + n)) i m) m) (lift n i N)
-      ≡⟨ cong (λ w → subst-var (match w m) (lift n i N)) (Subst.Var.lift-var-> prop) ⟩ 
+      ≡⟨ cong (λ w → subst-var (match w m) (lift n i N)) (LC.Subst.Var.lift-var-> prop) ⟩ 
         subst-var (match m m) (lift n i N)
       ≡⟨ subst-var-match-≡ (lift n i N) refl ⟩ 
         lift 0 m (lift n i N)
@@ -155,7 +155,7 @@ subst-var-lift m n i x N with match x m
     subst-var (match (suc i + v) m) (lift n i N) 
   ≡⟨ subst-var-match-> (lift n i N) prop ⟩ 
     var (i + v) 
-  ≡⟨ cong var_ (sym (Subst.Var.lift-var-≤ prop2)) ⟩ 
+  ≡⟨ cong var_ (sym (LC.Subst.Var.lift-var-≤ prop2)) ⟩ 
     var (lift-var (m + n) i v)
   ∎ 
   where 
@@ -169,7 +169,7 @@ subst-var-lift m n i x N with match x m
     subst-var (match (suc v) m) (lift n i N)
   ≡⟨ subst-var-match-> {v} {m} (lift n i N) m≤v ⟩ 
     var v
-  ≡⟨ cong var_ (sym (Subst.Var.lift-var-> {m + n} {i} {v} (≤-pred n>x))) ⟩ 
+  ≡⟨ cong var_ (sym (LC.Subst.Var.lift-var-> {m + n} {i} {v} (≤-pred n>x))) ⟩ 
     var (lift-var (m + n) i v)
   ∎
 

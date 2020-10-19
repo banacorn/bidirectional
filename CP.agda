@@ -2,10 +2,11 @@ module CP where
 
 open import Data.Nat
 open import Relation.Nullary 
+open import Data.String using (String)
 
 
 TypeVar : Set 
-TypeVar = ℕ
+TypeVar = String
 
 infixl 11 _^
 infixl 10 _⨂_
@@ -26,26 +27,24 @@ data Type : Set where
     ⊤ : Type 
 
 
-
-
-_[_/_] : Type → Type → TypeVar → Type 
-(‵ P) [ T / X ] with P ≟ X 
-((‵ P) [ T / X ]) | yes p = T
-((‵ P) [ T / X ]) | no ¬p = ‵ P
-(P ^) [ T / X ] = (P [ T / X ]) ^
-(P ⨂ Q) [ T / X ] = (P [ T / X ]) ⨂ (Q [ T / X ])
-(P ⅋ Q) [ T / X ] = (P [ T / X ]) ⅋ (Q [ T / X ])
-(P ⨁ Q) [ T / X ] = (P [ T / X ]) ⨁ (Q [ T / X ])
-(P & Q) [ T / X ] = (P [ T / X ]) & (Q [ T / X ])
-(! P) [ T / X ] = ! (P [ T / X ])
-(¿ P) [ T / X ] = ¿ (P [ T / X ])
-∃[ P ] [ T / zero ] = {!   !}
-∃[ P ] [ T / suc X ] = {!   !}
-∀[ P ] [ T / X ] = {!   !}
-𝟙 [ T / X ] = {!   !}
-⊥ [ T / X ] = {!   !}
-𝟘 [ T / X ] = {!   !}
-⊤ [ T / X ] = {!  !}
+-- _[_/_] : Type → Type → TypeVar → Type 
+-- (‵ P) [ T / X ] with P ≟ X 
+-- ((‵ P) [ T / X ]) | yes p = T
+-- ((‵ P) [ T / X ]) | no ¬p = ‵ P
+-- (P ^) [ T / X ] = (P [ T / X ]) ^
+-- (P ⨂ Q) [ T / X ] = (P [ T / X ]) ⨂ (Q [ T / X ])
+-- (P ⅋ Q) [ T / X ] = (P [ T / X ]) ⅋ (Q [ T / X ])
+-- (P ⨁ Q) [ T / X ] = (P [ T / X ]) ⨁ (Q [ T / X ])
+-- (P & Q) [ T / X ] = (P [ T / X ]) & (Q [ T / X ])
+-- (! P) [ T / X ] = ! (P [ T / X ])
+-- (¿ P) [ T / X ] = ¿ (P [ T / X ])
+-- ∃[ P ] [ T / zero ] = {!   !}
+-- ∃[ P ] [ T / suc X ] = {!   !}
+-- ∀[ P ] [ T / X ] = {!   !}
+-- 𝟙 [ T / X ] = {!   !}
+-- ⊥ [ T / X ] = {!   !}
+-- 𝟘 [ T / X ] = {!   !}
+-- ⊤ [ T / X ] = {!  !}
 
 Channel : Set 
 Channel = ℕ
@@ -55,6 +54,10 @@ data Session : Set where
     _,_∶_ : Session → Channel → Type → Session
     _++_ : Session → Session → Session
     ∅ : Session
+
+
+
+
 
 -- infixl 4 _∶_∈_
 -- data _∶_∈_ : Channel → Type → Session → Set where

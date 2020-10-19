@@ -1,8 +1,8 @@
-module Parallel where
+module LC.Parallel where
 
-open import Base 
-open import Subst
-open import Reduction
+open import LC.Base 
+open import LC.Subst
+open import LC.Reduction
 
 open import Data.Nat
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive 
@@ -45,8 +45,8 @@ open import Relation.Binary.PropositionalEquality hiding ([_]; preorder)
 
 module Cong where 
 
-  open import Subst.Term
-  open import Subst.Var
+  open import LC.Subst.Term
+  open import LC.Subst.Var
 
 
   β⇒cong-lift-ƛ : ∀ {n i M M' N N'} → M β⇒ M' → N β⇒ N' → (ƛ lift (suc n) i M) ∙ lift n i N β⇒ lift n i (M' [ N' ])
@@ -80,11 +80,6 @@ module Cong where
 
     lemma-1-1 : ∀ i m n → subst-var (match m (suc i)) (var n) β⇒ {!   !}
     lemma-1-1 i m n = {!   !}
-
-    -- lemma-1-2 : ∀ i m n → subst-var (match o i) (var n) β⇒ {!   !}
-    -- lemma-1-2 i m n = {!   !}
-
-
 
   β⇒cong-[]-ƛ-∙ : ∀ {i M M' N N' O O'} → M β⇒ M' → N β⇒ N' → O β⇒ O' → (ƛ M [ O / suc i ]) ∙ N [ O / i ] β⇒ (M' [ N' ]) [ O' / i ]
   β⇒cong-[]-ƛ-∙ {zero} (β-var {n}) (β-var {m}) (β-var {o}) = {!   !}
@@ -139,9 +134,3 @@ module Cong where
 
 β⇒cong-[] : ∀ {M M' N N'} → M β⇒ M' → N β⇒ N' → M [ N ] β⇒ M' [ N' ]
 β⇒cong-[] = Cong.β⇒cong-[] 
--- β⇒cong-[] : ∀ {M M' N N'} → M β⇒ M' → N β⇒ N' → M [ N ] β⇒ M' [ N' ]
--- β⇒cong-[] (β-var {zero}) N→N' = {!   !}
--- β⇒cong-[] (β-var {suc n}) N→N' = β-var
--- β⇒cong-[] (β-ƛ M→M') N→N' = β-ƛ {!   !}
--- β⇒cong-[] (β-∙ M→M' M→M'') N→N' = {!   !}
--- β⇒cong-[] (β-ƛ-∙ M→M' M→M'') N→N' = {!   !}

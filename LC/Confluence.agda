@@ -1,9 +1,9 @@
-module Confluence where 
+module LC.Confluence where 
 
 
-open import Base 
-open import Subst
-open import Reduction
+open import LC.Base 
+open import LC.Subst
+open import LC.Reduction
 
 open import Data.Product
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive 
