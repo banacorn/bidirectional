@@ -56,7 +56,7 @@ open import Data.Empty using (⊥-elim)
 
 infix 4 _≈_
 _≈_ : Session → Session → Set a
-Γ ≈ Δ = ∀ x → (Γ ∋ x → Δ ∋ x) × (Δ ∋ x → Γ ∋ x)
+Γ ≈ Δ = (Γ ∋ x → Δ ∋ x) × (Δ ∋ x → Γ ∋ x)
 
 ∅∌x : ∀ {x} → ¬ ∅ ∋ x
 ∅∌x ()
@@ -67,11 +67,16 @@ open DecSetoid ChanSetoid hiding (_≈_)
 ∅-empty {Δ} {x} P with P x
 ... | fst , snd = ∅∌x (snd (here refl))
 
-neither : ∀ {Γ x v A} → ¬ Γ ∋ v → v ≉ x → ¬ (Γ , x ∶ A ∋ v)
-neither Γ∌v v≉x (here v≈x) = v≉x v≈x
-neither Γ∌v v≉x (there P) = Γ∌v P
+-- neither : ∀ {Γ x v A} → ¬ Γ ∋ v → v ≉ x → ¬ (Γ , x ∶ A ∋ v)
+-- neither Γ∌v v≉x (here v≈x) = v≉x v≈x
+-- neither Γ∌v v≉x (there P) = Γ∌v P
 
-lemma : (Γ : Session) (x y : Chan) {A} → Dec (∃[ Δ ] ∃[ B ] (Γ ,  ≈ (Δ , x ∶ A)))
+-- neither : ∀ {Γ Δ x y A B} → x ≉ y → ¬ Γ ≈ Δ , x ∶ B → ¬ Γ , y ∶ A ≈ Δ , x ∶ B
+-- neither x≉y P Q = P (λ v → {!   !})
+
+-- ∃[ Δ ] ∃[ A ] (Γ ≈ (Δ , x ∶ A))
+
+-- lemma : (Γ : Session) (x y : Chan) {A} → Dec (∃[ Δ ] ∃[ B ] (Γ ,  ≈ (Δ , x ∶ A)))
 
 
 lookup : (Γ : Session) (x : Chan) → Dec (∃[ Δ ] ∃[ A ] (Γ ≈ (Δ , x ∶ A)))
@@ -94,7 +99,13 @@ lookup (Γ , y ∶ A) x with x ≟Chan y
       ,-weakening x A f (here v≈x) = here v≈x
       ,-weakening x A f (there Γ∋v) = there (f Γ∋v)
 
-... | no ¬P = {!  neither !}
+... | no ¬P = no λ Q → {!   !}
+
+-- GOAL : Γ , y ∶ A ≉ CTX , x ∶ TYPE
+-- ¬P     Γ         ≉ CTX , x : TYPE 
+
+
+
   -- no (λ (Δ , B , Q) → ¬P (Δ , B , {!  Q !}))
   -- λ v → (λ Γ∋v → proj₁ (Q v) (there Γ∋v)) 
   --                                                 , (λ Δ,x∶B∋v → {! proj₂ (Q v) Δ,x∶B∋v  !})))
