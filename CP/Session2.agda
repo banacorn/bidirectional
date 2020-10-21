@@ -30,19 +30,19 @@ open import Relation.Nullary.Decidable
 
 infix 4 _∋_
 data _∋_ : (Γ : Session) → (x : Chan) → Set a where
-  here  : ∀ {Γ x y A} → x ≈Chan y → Γ , y ∶ A ∋ x
-  there : ∀ {Γ x y A} → x ≉Chan y → Γ         ∋ x → Γ , y ∶ A ∋ x
-  left  : ∀ {Γ Δ x}               → Γ         ∋ x → Γ ++ Δ    ∋ x
-  right : ∀ {Γ Δ x}               → Δ         ∋ x → Γ ++ Δ    ∋ x
+  here  : ∀ {Γ x y A} → x ≈Chan y         → Γ , y ∶ A ∋ x
+  there : ∀ {Γ x y A} →             Γ ∋ x → Γ , y ∶ A ∋ x
+  left  : ∀ {Γ Δ x}               → Γ ∋ x → Γ ++ Δ    ∋ x
+  right : ∀ {Γ Δ x}               → Δ ∋ x → Γ ++ Δ    ∋ x
 
 infix 4 _∋?_
 _∋?_ : (Γ : Session) → (x : Chan) → Dec (Γ ∋ x)
 Γ , y ∶ A ∋? x with x ≟Chan y
 ... | yes x≈y = yes (here x≈y)
 ... | no ¬x≈y with Γ ∋? x
-... | yes Γ∋x = yes (there ¬x≈y Γ∋x)
+... | yes Γ∋x = yes (there Γ∋x)
 ... | no ¬Γ∋x = no (λ where (here x≈y) → ¬x≈y x≈y
-                            (there _ Γ∋x) → ¬Γ∋x Γ∋x)
+                            (there Γ∋x) → ¬Γ∋x Γ∋x)
 (Γ ++ Δ) ∋? x with Γ ∋? x 
 ... | yes Γ∋x = yes (left Γ∋x)
 ... | no ¬Γ∋x with Δ ∋? x 
@@ -56,7 +56,7 @@ open import Data.Empty using (⊥-elim)
 
 infix 4 _≈_
 _≈_ : Session → Session → Set a
-Γ ≈ Δ = ∀ x → (Γ ∋ x → Δ ∋ x) × (Δ ∋ x → Γ ∋ x)
+Γ ≈ Δ = (∀ x → Γ ∋ x → Δ ∋ x) × (∀ x → Δ ∋ x → Γ ∋ x)
 
 ∅∌x : ∀ {x} → ¬ ∅ ∋ x
 ∅∌x ()
@@ -64,58 +64,105 @@ _≈_ : Session → Session → Set a
 open DecSetoid ChanSetoid hiding (_≈_)
 
 ∅-empty : ∀ {Δ x A} → ¬ ∅ ≈ Δ , x ∶ A
-∅-empty {Δ} {x} P with P x
-... | fst , snd = ∅∌x (snd (here refl))
+∅-empty {Δ} {x} (P , Q) = ∅∌x (Q x (here refl))
 
-swap : ∀ {Γ x y z A B} → Γ , x ∶ A , y ∶ B ∋ z → Γ , y ∶ B , x ∶ A ∋ z
-swap {y = y} (here z≈y) = there {!   !} (here z≈y)
-swap (there x P) = {!   !}
+swap : ∀ {Γ x y A B} → Γ , x ∶ A , y ∶ B ≈ Γ , y ∶ B , x ∶ A
+swap {Γ} {x} {y} {A} {B} = to , from
+  where 
+    to : ∀ v → Γ , x ∶ A , y ∶ B ∋ v → Γ , y ∶ B , x ∶ A ∋ v
+    to v (here P) = there (here P)
+    to v (there (here P)) = here P
+    to v (there (there P)) = there (there P)
+
+    from : ∀ v → Γ , y ∶ B , x ∶ A ∋ v → Γ , x ∶ A , y ∶ B ∋ v
+    from v (here P) = there (here P)
+    from v (there (here P)) = here P
+    from v (there (there P)) = there (there P)
+
+-- contract : ∀ {Γ x y A B} →  → Γ , x ∶ A ≈ Γ
+-- contract
+-- strengthen : ∀ {Γ x A v} → Γ , x ∶ A ∋ v → x ≉ v → Γ ∋ v
+-- strengthen (here x≈v) x≉v = ⊥-elim (x≉v (sym x≈v))
+-- strengthen (there P) x≉v = P
 
 lookup : (Γ : Session) (x : Chan) → Dec (∃[ Δ ] ∃[ A ] (Γ ≈ (Δ , x ∶ A)))
 lookup (Γ , y ∶ A) x with x ≟Chan y
-... | yes x≈y = yes (Γ , A , λ v → (λ where (here v≈y) → here (trans v≈y (sym x≈y))
-                                            (there v≉y Γ∋v) → there (λ v≈x → v≉y (trans v≈x x≈y)) Γ∋v)
-                                  , λ where (here v≈x) → here (trans v≈x x≈y)
-                                            (there v≉x Γ∋v) → there (λ v≈y → v≉x (trans v≈y (sym x≈y))) Γ∋v) 
+... | yes x≈y = yes (Γ , A  , (λ where v (here v≈y) → here (trans v≈y (sym x≈y))
+                                       v (there Γ∷y∋v) → there Γ∷y∋v) 
+                             , λ where v (here v≈x) → here (trans v≈x x≈y)
+                                       v (there Γ∷x∋v) → there Γ∷x∋v)
 ... | no ¬x≈y with lookup Γ x 
-... | yes (Δ , B , Γ≈Δ,x∶B) = yes (Δ , y ∶ A , B , λ v → (λ where (here v≈y) → there (λ v≈x → ¬x≈y (trans (sym v≈x) v≈y)) (here v≈y)
-                                                                  (there _ Γ∋v) → {! proj₁ (Γ≈Δ,x∶B v)  !})
-                                                                    -- lemma-1 (proj₁ (Γ≈Δ,x∶B v) Γ∋v)) 
-                                                        , λ where (here v≈x) → there (λ v≈y → ¬x≈y (trans (sym v≈x) v≈y)) (proj₂ (Γ≈Δ,x∶B v) (here v≈x))
-                                                                  (there _ Δ,y∶A∋y) → ,-weakening y A (proj₂ (Γ≈Δ,x∶B v)) (lemma-1 Δ,y∶A∋y))
-    where 
-      
-
-      lemma-1 : ∀ {Γ x y z A B} → Γ , x ∶ A ∋ z → Γ , y ∶ B , x ∶ A ∋ z
-      lemma-1 (here z≈x) = here z≈x
-      lemma-1 (there z≉x Γ∋z) = there z≉x (there {!  !} Γ∋z)
-
-      ,-weakening : ∀ {Γ Δ v} x A → (Γ ∋ v → Δ ∋ v) → (Γ , x ∶ A ∋ v → Δ , x ∶ A ∋ v)
-      ,-weakening x A f (here v≈x) = here v≈x
-      ,-weakening x A f (there v≉x Γ∋v) = there v≉x (f Γ∋v)
-
-... | no ¬P = no (λ where (Δ , B , Q) → ¬P (Δ , B , λ v → (λ where 
-                                                              (here P) → proj₁ (Q v) (there {!   !} (here P))
-                                                              (there _ P) → proj₁ (Q v) (there {!   !} (there {!   !} P))
-                                                              (left P) → proj₁ (Q v) (there {!   !} (left P))
-                                                              (right P) → proj₁ (Q v) (there {!   !} (right P))) 
-                                                                , λ where (here P) → strengthen (proj₂ (Q v) (here P)) (λ y≈v → ¬x≈y (sym (trans y≈v P)))
-                                                                          (there v≉x P) → temp Δ B v v≉x P (proj₂ (Q v))))
-    where 
-      strengthen : ∀ {Γ x A v} → Γ , x ∶ A ∋ v → x ≉ v → Γ ∋ v
-      strengthen (here x≈v) x≉v = ⊥-elim (x≉v (sym x≈v))
-      strengthen (there _ P) x≉v = P
-
-
-      temp : ∀ Δ B v → v ≉ x → (Δ ∋ v) → (f : Δ , x ∶ B ∋ v → Γ , y ∶ A ∋ v) → Γ ∋ v
-      temp Δ B v v≉x Δ∋v f = {! f (there ? ?) !}
-      -- with v ≟Chan x
-      -- ... | yes v≈x = strengthen (f (here v≈x)) (λ y≈v → ¬x≈y (sym (trans y≈v v≈x)))
-      -- ... | no ¬v≈x with y ≟Chan v
-      -- ... | yes y≈v = {!   !}
-      -- ... | no ¬y≈v = strengthen (f (there {!   !} Δ∋v)) ¬y≈v
+... | yes (Δ , B , Γ≈Δ,x∶B) = yes (Δ , y ∶ A , B  , (λ where v (here v≈y) → there (here v≈y)
+                                                             v (there Γ∋v) → proj₁ swap v (there (proj₁ Γ≈Δ,x∶B v Γ∋v))) 
+                                                  , λ where v (here v≈x) → there (proj₂ Γ≈Δ,x∶B v (here v≈x))
+                                                            v (there (here v≈y)) → here v≈y
+                                                            v (there (there Δ∋v)) → there (proj₂ Γ≈Δ,x∶B v (there Δ∋v)))
+... | no ¬P = no (λ (Δ , B , Q) → ¬P (Δ , B , {!   !}))
+  -- (λ where v P → proj₁ Q v (there P)) 
+  --                                           , (λ where v P → {! proj₂ Q v P   !})))
 lookup (Γ ++ Δ) x = {!   !}
 lookup ∅ x = no (λ where (Δ , A , P) → ∅-empty P)
+
+-- ... | yes x≈y = yes (Γ , A , λ v → (λ where (here v≈y) → here (trans v≈y (sym x≈y))
+--                                             (there Γ∋v) → there Γ∋v) -- (λ v≈x → v≉y (trans v≈x x≈y))
+--                                   , λ where (here v≈x) → here (trans v≈x x≈y)
+--                                             (there Γ∋v) → there Γ∋v) -- (λ v≈y → v≉x (trans v≈y (sym x≈y))) 
+-- ... | no ¬x≈y with lookup Γ x 
+-- ... | yes (Δ , B , Γ≈Δ,x∶B) = yes (Δ , y ∶ A , B , λ v → (λ where (here v≈y) → there (here v≈y) -- (λ v≈x → ¬x≈y (trans (sym v≈x) v≈y)) 
+--                                                                   (there Γ∋v) → lemma-1 (proj₁ (Γ≈Δ,x∶B v) Γ∋v)) 
+--                                                         , λ where (here v≈x) → there (proj₂ (Γ≈Δ,x∶B v) (here v≈x)) -- (λ v≈y → ¬x≈y (trans (sym v≈x) v≈y))
+--                                                                   (there Δ,y∶A∋y) → ,-weakening y A (proj₂ (Γ≈Δ,x∶B v)) (lemma-1 Δ,y∶A∋y))
+--     where 
+--       lemma-1 : ∀ {Γ x y z A B} → Γ , x ∶ A ∋ z → Γ , y ∶ B , x ∶ A ∋ z
+--       lemma-1 (here z≈x) = here z≈x
+--       lemma-1 (there Γ∋z) = there (there Γ∋z)
+
+--       ,-weakening : ∀ {Γ Δ v} x A → (Γ ∋ v → Δ ∋ v) → (Γ , x ∶ A ∋ v → Δ , x ∶ A ∋ v)
+--       ,-weakening x A f (here v≈x) = here v≈x
+--       ,-weakening x A f (there Γ∋v) = there (f Γ∋v)
+
+-- ... | no ¬P = no λ Q → {!   !}
+
+-- -- GOAL : Γ , y ∶ A ≉ CTX , x ∶ TYPE
+-- -- ¬P     Γ         ≉ CTX , x : TYPE 
+
+
+
+--   -- no (λ (Δ , B , Q) → ¬P (Δ , B , {!  Q !}))
+--   -- λ v → (λ Γ∋v → proj₁ (Q v) (there Γ∋v)) 
+--   --                                                 , (λ Δ,x∶B∋v → {! proj₂ (Q v) Δ,x∶B∋v  !})))
+--   --                       → (λ Γ∋v → proj₁ (Q v) (there Γ∋v)) 
+--   --                       , λ Δ,x∶B∋v → {! (proj₂ (Q v) Δ,x∶B∋v)  !}))
+--                           -- where 
+--                           --   (here P)  → strengthen (proj₂ (Q v) (here P)) (λ y≈v → ¬x≈y (sym (trans y≈v P)))
+--                           --   (there P) → {!   !}))
+                                                          
+--     where 
+
+--       -- GOAL : Δ , x ∶ B           →       Γ
+
+--       -- Q v :  Δ , x ∶ B          <≈>      Γ , y ∶ A 
+
+--       -- -- ¬P Δ A =              Γ   <=>  Δ , x ∶ A       
+--       --        (x₁ : Carrier) →
+--       --        Σ (Γ ∋ x₁ → Δ₁ , x ∶ A₁ ∋ x₁) (λ x₂ → Δ₁ , x ∶ A₁ ∋ x₁ → Γ ∋ x₁)))
+
+--       strengthen : ∀ {Γ x A v} → Γ , x ∶ A ∋ v → x ≉ v → Γ ∋ v
+--       strengthen (here x≈v) x≉v = ⊥-elim (x≉v (sym x≈v))
+--       strengthen (there P) x≉v = P
+
+--       temp : ∀ Δ B v → (Δ ∋ v) → (f : Δ , x ∶ B ∋ v → Γ , y ∶ A ∋ v) → Γ ∋ v
+--       temp Δ B v Δ∋v f with v ≟Chan x
+--       ... | yes v≈x = strengthen (f (here v≈x)) (λ y≈v → ¬x≈y (sym (trans y≈v v≈x)))
+--       ... | no ¬v≈x with y ≟Chan v
+--       ... | yes y≈v = {!   !}
+--       ... | no ¬y≈v = strengthen (f (there Δ∋v)) ¬y≈v
+--         -- strengthen (f (there Δ∈v)) λ y≈v → {!   !}
+
+--       -- lemma : G 
+
+-- lookup (Γ ++ Δ) x = {!   !}
+-- lookup ∅ x = no (λ where (Δ , A , P) → ∅-empty P)
 
 -- -- _≈?_ : (Γ Δ : Session) → Dec (Γ ≈ Δ)
 -- -- Γ ≈? Δ = {!   !}
