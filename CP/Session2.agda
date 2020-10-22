@@ -51,7 +51,7 @@ _∋?_ : (Γ : Session) → (x : Chan) → Dec (Γ ∋ x)
                             (right Δ∋x) → ¬Δ∋x Δ∋x)
 ∅ ∋? x = no (λ ())
 
-open import Data.Product hiding (swap)
+open import Data.Product
 open import Data.Empty using (⊥-elim)
 
 infix 4 _≈_
@@ -66,6 +66,7 @@ open DecSetoid ChanSetoid hiding (_≈_)
 ∅-empty : ∀ {Δ x A} → ¬ ∅ ≈ Δ , x ∶ A
 ∅-empty {Δ} {x} (P , Q) = ∅∌x (Q x (here refl))
 
+<<<<<<< HEAD
 swap : ∀ {Γ x y A B} → Γ , x ∶ A , y ∶ B ≈ Γ , y ∶ B , x ∶ A
 swap {Γ} {x} {y} {A} {B} = to , from
   where 
@@ -84,6 +85,8 @@ swap {Γ} {x} {y} {A} {B} = to , from
 -- strengthen : ∀ {Γ x A v} → Γ , x ∶ A ∋ v → x ≉ v → Γ ∋ v
 -- strengthen (here x≈v) x≉v = ⊥-elim (x≉v (sym x≈v))
 -- strengthen (there P) x≉v = P
+=======
+>>>>>>> 40f82fd098a0c30c87ea0056baa48152aefae1f6
 
 lookup : (Γ : Session) (x : Chan) → Dec (∃[ Δ ] ∃[ A ] (Γ ≈ (Δ , x ∶ A)))
 lookup (Γ , y ∶ A) x with x ≟Chan y
@@ -93,6 +96,7 @@ lookup (Γ , y ∶ A) x with x ≟Chan y
                                        v (there Γ∷x∋v) → there Γ∷x∋v)
 ... | no ¬x≈y with lookup Γ x 
 ... | yes (Δ , B , Γ≈Δ,x∶B) = yes (Δ , y ∶ A , B  , (λ where v (here v≈y) → there (here v≈y)
+<<<<<<< HEAD
                                                              v (there Γ∋v) → proj₁ swap v (there (proj₁ Γ≈Δ,x∶B v Γ∋v))) 
                                                   , λ where v (here v≈x) → there (proj₂ Γ≈Δ,x∶B v (here v≈x))
                                                             v (there (here v≈y)) → here v≈y
@@ -100,6 +104,10 @@ lookup (Γ , y ∶ A) x with x ≟Chan y
 ... | no ¬P = no (λ (Δ , B , Q) → ¬P (Δ , B , {!   !}))
   -- (λ where v P → proj₁ Q v (there P)) 
   --                                           , (λ where v P → {! proj₂ Q v P   !})))
+=======
+                                                             v (there Γ∋v) → {!   !}) , {!   !})
+... | no P = {!   !}
+>>>>>>> 40f82fd098a0c30c87ea0056baa48152aefae1f6
 lookup (Γ ++ Δ) x = {!   !}
 lookup ∅ x = no (λ where (Δ , A , P) → ∅-empty P)
 
