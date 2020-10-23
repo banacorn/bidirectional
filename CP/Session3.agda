@@ -2,49 +2,34 @@ open import Relation.Binary using (Decidable; Setoid; DecSetoid)
 open import Level 
 
 
-module CP.Session3 {a} (ChanSetoid : DecSetoid zero a) (Type : Set) where 
+module CP.Session3 {a} {b} (ChanDecSetoid : DecSetoid zero a) (TypeDecSetoid : DecSetoid zero b) where 
+
+module TS = DecSetoid TypeDecSetoid
+
+
+Type : Set
+Type = DecSetoid.Carrier TypeDecSetoid
+
+open DecSetoid ChanDecSetoid
 
 Chan : Set
-Chan = DecSetoid.Carrier ChanSetoid
+Chan = Carrier
 
+module _ where 
+  -- type of 
+  data TypeOf : Set a where 
+    _∶_ : (x : Chan) → (A : Type) → TypeOf
 
+  chanOf : TypeOf → Chan 
+  chanOf (x ∶ _) = x
 
--- type of 
-data TypeOf : Set a where 
-  _∶_ : (x : Chan) → (A : Type) → TypeOf
+  import Relation.Binary.Construct.On as On
+  
+  decSetoid : DecSetoid _ _
+  decSetoid = On.decSetoid ChanDecSetoid chanOf
 
-open TypeOf public
-
--- typeOfSetoid = record 
---   { Carrier = TypeOf
---   ; _≈_ = λ where (x ∶ _) (y ∶ _) → (DecSetoid._≈_ ChanSetoid) x y
---   ; isDecEquivalence = record 
---     { isEquivalence = record 
---       { refl = λ where {x ∶ _} → DecSetoid.refl ChanSetoid
---       ; sym = λ where {x ∶ _} {y ∶ _} P → DecSetoid.sym ChanSetoid P 
---       ; trans = λ where {x ∶ _} {y ∶ _} {z ∶ _} P Q → DecSetoid.trans ChanSetoid P Q } 
---     ; _≟_ = λ where (x ∶ _) (y ∶ _) → (ChanSetoid DecSetoid.≟ x) y }
---   }
-
-typeOfDecSetoid : DecSetoid a a
-typeOfDecSetoid = record 
-  { Carrier = TypeOf
-  ; _≈_ = λ where (x ∶ _) (y ∶ _) → (DecSetoid._≈_ ChanSetoid) x y
-  ; isDecEquivalence = record 
-    { isEquivalence = record 
-      { refl = λ where {x ∶ _} → DecSetoid.refl ChanSetoid
-      ; sym = λ where {x ∶ _} {y ∶ _} P → DecSetoid.sym ChanSetoid P 
-      ; trans = λ where {x ∶ _} {y ∶ _} {z ∶ _} P Q → DecSetoid.trans ChanSetoid P Q } 
-    ; _≟_ = λ where (x ∶ _) (y ∶ _) → (ChanSetoid DecSetoid.≟ x) y }
-  }
-
-
-typeOfSetoid : Setoid a a
-typeOfSetoid = DecSetoid.setoid typeOfDecSetoid
-
-open import Data.List.Membership.DecSetoid typeOfDecSetoid
-open import Data.List public
-
+open import Data.List.Relation.Binary.Subset.DecSetoid decSetoid
+open import Data.List
 
 Session : Set a
 Session = List TypeOf
@@ -56,11 +41,14 @@ open import Relation.Nullary.Decidable
 
 open import Data.Product
 
-
--- open import Data.List.Relation.Binary.Equality.DecSetoid typeOfDecSetoid public 
-
--- seperate : (Γ : Session) → (x : Chan) → Dec (∃[ Δ ] ∃[ A ] {!   !})
--- seperate = {!  DecSetoid._≈_ !}
+seperate : (Γ : Session) → (x : Chan) → Dec (∃[ Δ ] ∃[ A ] (Γ ≋ x ∶ A ∷ Δ))
+seperate []          x = no (λ where (Δ , A , fst , snd) → ∉[] snd)
+seperate (y ∶ A ∷ Γ) x with y ≟ x 
+... | yes p = yes {!   !}
+-- ... | yes p = yes (Γ , A , (λ {v} → ⊆-∷-cong p (λ {w} → (⊆-refl {_} {w})) {v}) , λ {v} → λ x₁ → {!   !})
+... | no ¬p with seperate Γ x 
+... | yes (Δ , B , to , from) = yes (y ∶ A ∷ Δ , B , {!   !})
+... | no ¬q = {!   !}
 
 -- infixr 5 _#_
 -- _#_ : Session → TypeOf → Session
