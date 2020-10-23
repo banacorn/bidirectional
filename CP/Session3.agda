@@ -44,10 +44,13 @@ open import Data.Product
 seperate : (Γ : Session) → (x : Chan) → Dec (∃[ Δ ] ∃[ A ] (Γ ≋ x ∶ A ∷ Δ))
 seperate []          x = no (λ where (Δ , A , fst , snd) → ∉[] snd)
 seperate (y ∶ A ∷ Γ) x with y ≟ x 
-... | yes p = yes {!   !}
--- ... | yes p = yes (Γ , A , (λ {v} → ⊆-∷-cong p (λ {w} → (⊆-refl {_} {w})) {v}) , λ {v} → λ x₁ → {!   !})
+... | yes p = yes (Γ , A , (⊆-∷-cong p ⊆-refl) , ⊆-∷-cong (sym p) ⊆-refl)
 ... | no ¬p with seperate Γ x 
-... | yes (Δ , B , to , from) = yes (y ∶ A ∷ Δ , B , {!   !})
+... | yes (Δ , B , to , from) = yes (y ∶ A ∷ Δ , B , {!   !} , {!   !})
+  where 
+    to' : y ∶ A ∷ Γ ⊆ x ∶ B ∷ y ∶ A ∷ Δ
+    to' = {!   !}
+
 ... | no ¬q = {!   !}
 
 -- infixr 5 _#_

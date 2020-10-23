@@ -42,8 +42,6 @@ module _ where
   _⊈_ : Rel (List Carrier) (c ⊔ ℓ)
   xs ⊈ ys = ¬ xs ⊆ ys
 
-
-
   -- lemma 
   ∈-cong : ∀ {xs x y} → x ≈ y → x ∈ xs → y ∈ xs
   ∈-cong x≈y (here P) = here (trans (sym x≈y) P)
@@ -90,58 +88,37 @@ module _ where
   _≋?_ : Decidable _≋_
   _≋?_ = decidable _⊆?_ (flip _⊆?_)
 
--- ------------------------------------------------------------------------
--- -- Relational properties
+------------------------------------------------------------------------
+-- Relational properties
 
--- open import Data.List 
--- open import Data.List.Membership.DecSetoid S
--- open import Relation.Nullary
--- open import Relation.Nullary.Decidable
+module _ where 
+  open import Data.Product
 
--- open import Data.List.Relation.Unary.Any
+  ≋-IsEquivalence : IsEquivalence _≋_
+  ≋-IsEquivalence = record 
+    { refl = (λ x z → z) , (λ x z → z) 
+    ; sym = λ where (P , Q) → Q , P 
+    ; trans = λ where (P , Q) (S , T) → (λ x U → S x (P x U)) , λ x V → Q x (T x V) 
+    }
 
--- open import Data.List.Relation.Unary.Any.Properties
+  ⊆-IsPreorder : IsPreorder _≋_ _⊆_
+  ⊆-IsPreorder = record 
+    { isEquivalence = ≋-IsEquivalence
+    ; reflexive = λ where (P , Q) x R → P x R
+    ; trans = λ P Q x R → Q x (P x R)
+    }
 
--- -- lemma 
--- ∈-cong : ∀ {xs x y} → x ≈ y → x ∈ xs → y ∈ xs
--- ∈-cong x≈y (here P) = here (trans (sym x≈y) P)
--- ∈-cong x≈y (there P) = there (∈-cong x≈y P)
+  ⊆-Antisymmetric : Antisymmetric _≋_ _⊆_
+  ⊆-Antisymmetric P Q = P , Q
 
--- infix 4 _⊆?_
--- _⊆?_ : Decidable _⊆_
--- [] ⊆? ys = yes (λ ())
--- x ∷ xs ⊆? [] = no (λ P → ¬Any[] (∈-cong refl (P (here refl))))
--- x ∷ xs ⊆? y ∷ ys with x ∈? y ∷ ys 
--- x ∷ xs ⊆? y ∷ ys | yes P with xs ⊆? y ∷ ys 
--- ... | yes Q = yes (λ where (here R) → ∈-cong (sym R) P
---                            (there R) → Q R)
--- ... | no ¬Q = no (λ R → ¬Q (λ where y∈xs → R (there y∈xs)))
--- x ∷ xs ⊆? y ∷ ys | no ¬P = no (λ Q → ¬P (Q (here refl)))
+  ⊆-isPartialOrder : IsPartialOrder _≋_ _⊆_
+  ⊆-isPartialOrder = record 
+    { isPreorder = ⊆-IsPreorder
+    ; antisym = ⊆-Antisymmetric }
 
--- open import Data.List.Relation.Binary.Subset.Setoid.Properties using (⊆-isPreorder)
-
--- -- ⊆-isPartialOrder : IsPartialOrder _≋_ _⊆_
--- -- ⊆-isPartialOrder = record 
--- --   { isPreorder = ⊆-isPreorder setoid
--- --   ; antisym = {!   !} }
-
--- open import Data.Empty using (⊥-elim)
-
--- ⊆-Antisymmetric : Antisymmetric _≋_ _⊆_
--- ⊆-Antisymmetric {[]} {[]} xs⊆ys ys⊆xs = []
--- ⊆-Antisymmetric {[]} {y ∷ ys} xs⊆ys ys⊆xs = ⊥-elim (¬Any[] (ys⊆xs (here refl)))
--- ⊆-Antisymmetric {x ∷ xs} {[]} xs⊆ys ys⊆xs = ⊥-elim (¬Any[] (xs⊆ys (here refl)))
--- ⊆-Antisymmetric {x ∷ xs} {y ∷ ys} xs⊆ys ys⊆xs = {!   !}
-
-
--- ⊆-isPartialOrder : IsPartialOrder _≋_ _⊆_
--- ⊆-isPartialOrder = record 
---   { isPreorder = ⊆-isPreorder setoid -- ⊆-isPreorder setoid
---   ; antisym = {!   !} }
-
--- -- ⊆-isDecPartialOrder : IsDecPartialOrder _≋_ _⊆_
--- -- ⊆-isDecPartialOrder = record
--- --   { isPartialOrder = ⊆-isPartialOrder
--- --   ; _≟_            = _≋?_
--- --   ; _≤?_           = _⊆?_
--- --   }
+  ⊆-isDecPartialOrder : IsDecPartialOrder _≋_ _⊆_
+  ⊆-isDecPartialOrder = record
+    { isPartialOrder = ⊆-isPartialOrder
+    ; _≟_            = _≋?_
+    ; _≤?_           = _⊆?_
+    }
